@@ -1,0 +1,3738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CaterFlow - Professional Catering Management System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2a2016;
+            --accent: #d6b35a;
+            --accent-light: #f3e4c3;
+            --bg-light: #f8f5ef;
+            --bg-cream: #f3ede4;
+            --text: #2b2118;
+            --text-light: #6d5c4a;
+            --border: #e6dccf;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            color: var(--text);
+            background: var(--bg-light);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(250, 250, 248, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            z-index: 1000;
+            animation: slideDown 0.6s ease;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-100%); }
+            to { transform: translateY(0); }
+        }
+
+        nav {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1.5rem 3rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+            letter-spacing: -0.5px;
+        }
+
+        .logo span {
+            color: var(--accent);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 3rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 400;
+            font-size: 0.95rem;
+            transition: color 0.3s;
+            letter-spacing: 0.3px;
+        }
+
+        .nav-links a:hover {
+            color: var(--accent);
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .mobile-menu-btn span {
+            width: 25px;
+            height: 2px;
+            background: var(--primary);
+            transition: all 0.3s;
+        }
+
+        .mobile-menu-btn.active span:nth-child(1) {
+            transform: rotate(45deg) translate(7px, 7px);
+        }
+
+        .mobile-menu-btn.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .mobile-menu-btn.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(7px, -7px);
+        }
+
+        .cta-nav {
+            background: var(--accent);
+            color: var(--primary);
+            padding: 0.75rem 1.8rem;
+            border-radius: 2px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+            font-size: 0.95rem;
+            letter-spacing: 0.5px;
+        }
+
+        .auth-dropdown {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .auth-toggle {
+            padding: 0.7rem 1.4rem;
+            border-radius: 2px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border: 1px solid var(--primary);
+            color: var(--accent);
+            background: var(--primary);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .auth-toggle:hover {
+            background: var(--accent);
+            color: var(--primary);
+        }
+
+        .auth-menu {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            box-shadow: 0 18px 40px rgba(0,0,0,0.12);
+            min-width: 200px;
+            padding: 0.5rem;
+            display: none;
+            z-index: 1200;
+        }
+
+        .auth-menu.active {
+            display: block;
+        }
+
+        .auth-menu a {
+            display: block;
+            padding: 0.75rem 1rem;
+            color: var(--text);
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+
+        .auth-menu a:hover {
+            background: var(--bg-light);
+            color: var(--accent);
+        }
+
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(34, 26, 18, 0.64);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 1.5rem;
+            backdrop-filter: blur(6px);
+        }
+
+        .modal-backdrop.active {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal {
+            background: rgba(255, 255, 255, 0.78);
+            border-radius: 18px;
+            width: 100%;
+            max-width: 540px;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 35px 90px rgba(19, 14, 9, 0.45);
+            border: 1px solid rgba(255, 255, 255, 0.45);
+            position: relative;
+            transform: translateY(12px) scale(0.96);
+            opacity: 0;
+            backdrop-filter: blur(18px);
+            transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.35s ease;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.6rem 2.2rem 1.4rem;
+            border-bottom: 1px solid rgba(230, 220, 207, 0.8);
+            background: linear-gradient(135deg, rgba(214, 179, 90, 0.18) 0%, rgba(255, 255, 255, 0.92) 100%);
+        }
+
+        .modal-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.7rem;
+            color: var(--primary);
+            letter-spacing: 0.3px;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-light);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .modal-backdrop.active .modal {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+            animation: modalIn 0.45s ease both;
+        }
+
+        @keyframes modalIn {
+            from { opacity: 0; transform: translateY(16px) scale(0.94); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .modal-close:hover {
+            background: rgba(0,0,0,0.06);
+            color: var(--primary);
+        }
+
+        .modal-body {
+            padding: 2rem 2.2rem 2.2rem;
+        }
+
+        .modal-body::before {
+            content: '';
+            position: absolute;
+            top: -40px;
+            right: -40px;
+            width: 180px;
+            height: 180px;
+            background: radial-gradient(circle, rgba(214, 179, 90, 0.2) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .modal-tags {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.25rem;
+        }
+
+        .modal-tag {
+            font-size: 0.78rem;
+            padding: 0.35rem 0.7rem;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(230, 220, 207, 0.8);
+            color: var(--text-light);
+        }
+
+        .modal-body p {
+            color: var(--text-light);
+            margin-bottom: 1.35rem;
+        }
+
+        .modal-subtitle {
+            font-size: 0.98rem;
+            color: var(--text-light);
+            margin-bottom: 1rem;
+        }
+
+        .form-progress {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            padding: 0 0 1rem 0;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .progress-step {
+            flex: 1;
+            text-align: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-light);
+            padding: 0.5rem;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .progress-step.active {
+            color: var(--accent);
+        }
+
+        .progress-step.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1rem;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--accent);
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+
+        .form-group label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="email"],
+        .form-group input[type="tel"],
+        .form-group input[type="password"] {
+            width: 100%;
+            padding: 0.9rem 1.1rem;
+            border: 1.5px solid rgba(230, 220, 207, 0.9);
+            border-radius: 12px;
+            font-size: 0.95rem;
+            background: rgba(255, 255, 255, 0.85);
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(214, 179, 90, 0.2);
+        }
+
+        .form-hint {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-top: 0.15rem;
+        }
+
+        .form-error {
+            background: rgba(242, 215, 214, 0.55);
+            border: 1px solid rgba(232, 162, 158, 0.6);
+            color: #8f3b38;
+            padding: 0.85rem 1rem;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            margin: 0.5rem 0;
+            animation: slideIn 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .form-error::before {
+            content: '!';
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: rgba(232, 162, 158, 0.35);
+            color: #8f3b38;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .form-error.success {
+            background: #efe;
+            border-color: #cfc;
+            border-left-color: #6da76d;
+            color: #3c3;
+        }
+
+        .form-error.success::before {
+            content: '✓';
+            color: #6da76d;
+            background: rgba(109, 167, 109, 0.2);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 0.75rem 0 0.5rem;
+            gap: 1rem;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+            font-size: 0.9rem;
+            color: var(--text);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .checkbox-label input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--accent);
+        }
+
+        .checkbox-label .link {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .checkbox-label .link:hover {
+            text-decoration: underline;
+        }
+
+        .forgot-password-link {
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.3s, transform 0.3s;
+        }
+
+        .forgot-password-link:hover {
+            text-decoration: underline;
+            transform: translateY(-1px);
+        }
+
+        .password-strength {
+            margin-top: 0.75rem;
+            padding: 0.75rem;
+            background: #f8f6f3;
+            border-radius: 6px;
+            display: none;
+            border-left: 4px solid #d4c5a0;
+        }
+
+        .password-strength.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .password-meter {
+            height: 6px;
+            background: #e5e0d8;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .password-meter-bar {
+            height: 100%;
+            width: 0;
+            background: #d4c5a0;
+            transition: all 0.3s ease;
+        }
+
+        .password-strength.weak .password-meter-bar {
+            width: 33%;
+            background: #e8756f;
+        }
+
+        .password-strength.medium .password-meter-bar {
+            width: 66%;
+            background: #f4c430;
+        }
+
+        .password-strength.strong .password-meter-bar {
+            width: 100%;
+            background: #6da76d;
+        }
+
+        .password-requirements {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 0.5rem;
+        }
+
+        .req-item {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            margin: 0.25rem 0;
+            transition: color 0.2s ease;
+        }
+
+        .req-item::before {
+            content: '○';
+            color: #ccc;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        .req-item.met {
+            color: #6da76d;
+        }
+
+        .req-item.met::before {
+            content: '✓';
+            color: #6da76d;
+        }
+
+        .password-strength.weak { border-left-color: #e8756f; }
+        .password-strength.medium { border-left-color: #f4c430; }
+        .password-strength.strong { border-left-color: #6da76d; }
+
+        .form-section {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .form-section.hidden {
+            display: none;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-group input:valid {
+            border-color: var(--border);
+            background: #fff;
+        }
+
+        .form-group input:invalid:not(:placeholder-shown) {
+            border-color: var(--border);
+            background: #fff;
+        }
+
+        .modal-submit.loading,
+        .modal-submit:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .btn-loader {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .modal-secondary strong {
+            font-weight: 700;
+        }
+
+        @media (max-width: 480px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-header {
+                padding: 1.3rem 1.4rem 1.1rem;
+            }
+
+            .modal-body {
+                padding: 1.6rem 1.4rem 1.8rem;
+            }
+
+            .form-progress {
+                gap: 0.5rem;
+            }
+
+            .progress-step {
+                font-size: 0.8rem;
+            }
+
+            .form-options {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.6rem;
+            }
+        }
+
+        .modal-form {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .form-section-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding-top: 0.5rem;
+            margin-bottom: 0.5rem;
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 0.5rem;
+        }
+
+        .modal-form input,
+        .modal-form select,
+        #registerForm input {
+            width: 100%;
+            padding: 0.9rem 1.1rem;
+            border: 1.5px solid rgba(230, 220, 207, 0.9);
+            border-radius: 12px;
+            font-size: 0.95rem;
+            background: rgba(255, 255, 255, 0.9);
+            transition: border-color 0.3s, box-shadow 0.3s;
+            box-sizing: border-box;
+        }
+
+        .modal-form input:focus,
+        .modal-form select:focus,
+        #registerForm input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(214, 179, 90, 0.2);
+        }
+
+        .modal-form input:invalid,
+        .modal-form select:invalid,
+        #registerForm input:invalid {
+            border-color: var(--border);
+            background: #fff;
+        }
+
+        .password-group {
+            position: relative;
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+
+        .password-group .password-input {
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .password-group input[type="password"],
+        .password-group input[type="text"],
+        #registerForm .password-group input[type="password"],
+        #registerForm .password-group input[type="text"] {
+            width: 100%;
+            padding: 0.9rem 3rem 0.9rem 1.1rem;
+            border: 1.5px solid rgba(230, 220, 207, 0.9);
+            border-radius: 12px;
+            font-size: 0.95rem;
+            background: rgba(255, 255, 255, 0.9);
+            transition: border-color 0.3s, box-shadow 0.3s;
+            box-sizing: border-box;
+            display: block;
+        }
+
+        .password-group input[type="password"]:focus,
+        .password-group input[type="text"]:focus,
+        #registerForm .password-group input[type="password"]:focus,
+        #registerForm .password-group input[type="text"]:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(214, 179, 90, 0.2);
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 0.75rem;
+            background: transparent;
+            border: none;
+            color: var(--text-light);
+            width: 34px;
+            height: 34px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border-radius: 999px;
+            transition: all 0.2s ease;
+        }
+
+        .password-toggle:hover {
+            color: var(--primary);
+            background: rgba(214, 179, 90, 0.12);
+        }
+
+        .password-toggle svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .password-toggle .eye-slash {
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .password-toggle.is-visible .eye-slash {
+            opacity: 1;
+        }
+
+        .password-toggle.is-visible .pupil {
+            opacity: 0.2;
+        }
+
+        .password-group input[type="password"]:invalid,
+        .password-group input[type="text"]:invalid,
+        #registerForm .password-group input[type="password"]:invalid,
+        #registerForm .password-group input[type="text"]:invalid {
+            border-color: var(--border);
+            background: #fff;
+        }
+
+
+
+        .modal-submit {
+            width: 100%;
+            padding: 0.95rem 1.2rem;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #e6c570 0%, #cda24c 100%);
+            color: var(--primary);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 0.2px;
+        }
+
+        .modal-submit::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.25);
+            transition: left 0.3s ease;
+        }
+
+        .modal-submit:hover {
+            background: linear-gradient(135deg, #f1d98c 0%, #d2a75a 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(214, 179, 90, 0.35);
+        }
+
+        .modal-submit:hover::before {
+            left: 100%;
+        }
+
+        .modal-submit:active {
+            transform: translateY(0);
+        }
+
+        .modal-actions {
+            display: grid;
+            gap: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .modal-secondary {
+            padding: 0.85rem 1.2rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: white;
+            color: var(--text);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .modal-secondary:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(212, 175, 55, 0.05);
+            transform: translateY(-1px);
+        }
+
+        .modal-secondary:active {
+            transform: translateY(0);
+        }
+
+        #registerModal .modal {
+            max-width: 720px;
+            border-radius: 20px;
+            background: linear-gradient(165deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 243, 233, 0.92) 100%);
+            border: 1px solid rgba(214, 179, 90, 0.28);
+            box-shadow: 0 30px 80px rgba(32, 23, 13, 0.28);
+        }
+
+        #registerModal .modal-header {
+            padding: 1.7rem 2.2rem 1.3rem;
+            background: linear-gradient(135deg, rgba(42, 32, 22, 0.95) 0%, rgba(74, 56, 35, 0.95) 55%, rgba(214, 179, 90, 0.9) 140%);
+            border-bottom: 1px solid rgba(214, 179, 90, 0.22);
+        }
+
+        #registerModal .modal-title {
+            color: #fff;
+            font-size: 1.8rem;
+            letter-spacing: 0.4px;
+        }
+
+        #registerModal .modal-close {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        #registerModal .modal-close:hover {
+            background: rgba(255, 255, 255, 0.18);
+            color: #fff;
+        }
+
+        #registerModal .modal-body {
+            padding: 1.7rem 2.2rem 2.2rem;
+        }
+
+        #registerModal .modal-subtitle {
+            color: var(--text);
+            font-size: 1rem;
+            margin-bottom: 1.1rem;
+        }
+
+        #registerModal .modal-tags {
+            margin-bottom: 1.1rem;
+        }
+
+        #registerModal .modal-tag {
+            border: 1px solid rgba(214, 179, 90, 0.35);
+            background: rgba(214, 179, 90, 0.12);
+            color: var(--primary);
+            font-weight: 500;
+        }
+
+        #registerModal .form-progress {
+            background: rgba(255, 255, 255, 0.72);
+            border: 1px solid rgba(230, 220, 207, 0.9);
+            border-radius: 12px;
+            padding: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+
+        #registerModal .progress-step {
+            background: rgba(243, 237, 228, 0.7);
+            border-radius: 8px;
+            padding: 0.55rem;
+            font-size: 0.82rem;
+            letter-spacing: 0.2px;
+        }
+
+        #registerModal .progress-step.active {
+            background: linear-gradient(135deg, rgba(214, 179, 90, 0.2) 0%, rgba(214, 179, 90, 0.34) 100%);
+            color: var(--primary);
+        }
+
+        #registerModal .progress-step.active::after {
+            display: none;
+        }
+
+        #registerModal .modal-form {
+            gap: 1.15rem;
+        }
+
+        #registerModal .form-section-title {
+            font-size: 0.82rem;
+            letter-spacing: 1.1px;
+            color: var(--text-light);
+            border-bottom: 1px solid rgba(214, 179, 90, 0.35);
+            margin-bottom: 0.15rem;
+        }
+
+        #registerModal .form-group label {
+            font-size: 0.83rem;
+            color: var(--text);
+            letter-spacing: 0.2px;
+        }
+
+        #registerModal .form-group input,
+        #registerModal .form-group select {
+            border-radius: 10px;
+            border-color: rgba(205, 188, 163, 0.95);
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        #registerModal .form-group input:focus,
+        #registerModal .form-group select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(214, 179, 90, 0.18), 0 10px 25px rgba(42, 32, 22, 0.08);
+        }
+
+        #registerModal .password-strength {
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(228, 215, 192, 0.9);
+        }
+
+        #registerModal .checkbox-label {
+            background: rgba(255, 255, 255, 0.75);
+            border: 1px solid rgba(230, 220, 207, 0.9);
+            border-radius: 10px;
+            padding: 0.75rem 0.9rem;
+        }
+
+        #registerModal .modal-actions {
+            grid-template-columns: 1fr 1fr;
+            gap: 0.9rem;
+            margin-top: 0.45rem;
+        }
+
+        #registerModal .modal-submit {
+            background: linear-gradient(135deg, #f0d188 0%, #d6b35a 50%, #bb8d2f 100%);
+            box-shadow: 0 10px 25px rgba(214, 179, 90, 0.28);
+        }
+
+        #registerModal .modal-submit:hover {
+            box-shadow: 0 14px 28px rgba(214, 179, 90, 0.34);
+        }
+
+        #registerModal .modal-secondary {
+            border-radius: 10px;
+            border-color: rgba(205, 188, 163, 0.95);
+            background: rgba(255, 255, 255, 0.85);
+        }
+
+        @media (max-width: 640px) {
+            #registerModal .modal-actions {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .admin-dashboard,
+        .staff-dashboard,
+        .customer-dashboard {
+            padding: 6rem 3rem;
+            background: linear-gradient(180deg, #ffffff 0%, #f8f5ef 100%);
+            display: none;
+        }
+
+        .admin-dashboard.visible,
+        .staff-dashboard.visible,
+        .customer-dashboard.visible {
+            display: block;
+        }
+
+        .admin-dashboard .section-header,
+        .staff-dashboard .section-header,
+        .customer-dashboard .section-header {
+            margin-bottom: 3rem;
+        }
+
+        .admin-kpis {
+            max-width: 1200px;
+            margin: 0 auto 3.5rem;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+        }
+
+        .admin-kpi {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.5rem;
+            text-align: left;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        }
+
+        .admin-kpi span {
+            display: block;
+            color: var(--text-light);
+            font-size: 0.85rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .admin-kpi strong {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            color: var(--primary);
+        }
+
+        .admin-features {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.8rem;
+        }
+
+        .admin-feature-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.06);
+        }
+
+        .admin-feature-card h4 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.2rem;
+            margin-bottom: 0.6rem;
+        }
+
+        .admin-feature-card p {
+            color: var(--text-light);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .cta-nav:hover {
+            background: var(--primary);
+            color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        /* Hero Section */
+        .hero {
+            margin-top: 85px;
+            min-height: calc(100vh - 85px);
+            display: flex;
+            align-items: center;
+            background:
+                linear-gradient(135deg, rgba(250,250,248,0.55) 0%, rgba(245,241,235,0.6) 55%, rgba(245,241,235,0.7) 100%),
+                url("https://images.unsplash.com/photo-1555244162-803834f70033?auto=format&fit=crop&w=1800&q=85");
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: -10%;
+            width: 60%;
+            height: 100%;
+            background: radial-gradient(circle at 30% 50%, rgba(212, 175, 55, 0.08) 0%, transparent 60%);
+            animation: float 20s ease-in-out infinite;
+            will-change: transform;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: -5%;
+            left: -5%;
+            width: 40%;
+            height: 40%;
+            background: radial-gradient(circle, rgba(212, 175, 55, 0.05) 0%, transparent 70%);
+            animation: float 15s ease-in-out infinite reverse;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            50% { transform: translate(-30px, 30px) rotate(5deg); }
+        }
+
+        .hero-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 4rem 3rem;
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 4rem;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-text {
+            animation: fadeInUp 0.8s ease 0.2s both;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hero-text h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 4.2rem;
+            font-weight: 700;
+            line-height: 1.1;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            letter-spacing: -1px;
+        }
+
+        .hero-text h1 .highlight {
+            color: var(--accent);
+            position: relative;
+            display: inline-block;
+        }
+
+        .hero-text p {
+            font-size: 1.25rem;
+            color: var(--text-light);
+            margin-bottom: 2.5rem;
+            line-height: 1.7;
+            font-weight: 300;
+        }
+
+        .cta-group {
+            display: flex;
+            gap: 1.5rem;
+            animation: fadeInUp 0.8s ease 0.4s both;
+        }
+
+        .btn-primary, .btn-secondary {
+            padding: 1rem 2.5rem;
+            border-radius: 2px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+            display: inline-block;
+            font-size: 1rem;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: var(--primary);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary);
+            color: var(--accent);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--primary);
+            color: var(--accent);
+            transform: translateY(-3px);
+        }
+
+        .hero-image {
+            position: relative;
+            animation: fadeInUp 0.8s ease 0.6s both;
+        }
+
+        .hero-image-wrapper {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+        }
+
+        .main-hero-img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 8px;
+            animation: fadeIn 0.6s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .feature-image,
+        .showcase-item img,
+        .author-avatar-img {
+            animation: fadeIn 0.4s ease;
+        }
+
+        .hero-card-overlay {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 4px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+        }
+
+        .hero-card {
+            background: white;
+            padding: 3rem;
+            border-radius: 4px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            border: 1px solid var(--border);
+            position: relative;
+        }
+
+        .hero-card::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent) 0%, transparent 100%);
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat {
+            text-align: center;
+            padding: 1.5rem;
+            background: var(--bg-light);
+            border-radius: 2px;
+        }
+
+        .stat-number {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--accent);
+            display: block;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--accent) 0%, #c99f2e 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            font-weight: 400;
+        }
+
+        .features-preview {
+            list-style: none;
+            padding: 0;
+        }
+
+        .features-preview li {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 0.95rem;
+        }
+
+        .features-preview li:last-child {
+            border-bottom: none;
+        }
+
+        .check-icon {
+            width: 20px;
+            height: 20px;
+            background: var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
+        /* Trusted By Section */
+        .trusted-by-section {
+            padding: 4rem 3rem;
+            background: white;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .trusted-by-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .trusted-by-label {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            margin-bottom: 2rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .logos-scroll {
+            display: flex;
+            gap: 4rem;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            opacity: 0.7;
+        }
+
+        .logo-item {
+            font-size: 1.1rem;
+            color: var(--text);
+            font-weight: 500;
+            padding: 1rem 2rem;
+            background: var(--bg-light);
+            border-radius: 4px;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .logo-item:hover {
+            opacity: 1;
+            transform: translateY(-3px);
+            background: var(--accent);
+            color: var(--primary);
+        }
+
+        /* Features Section */
+        .features {
+            padding: 8rem 3rem;
+            background: white;
+            position: relative;
+        }
+
+        .features::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent 0%, var(--border) 50%, transparent 100%);
+        }
+
+        .section-header {
+            text-align: center;
+            max-width: 700px;
+            margin: 0 auto 5rem;
+        }
+
+        .section-label {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--accent);
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            letter-spacing: -0.5px;
+        }
+
+        .section-description {
+            font-size: 1.15rem;
+            color: var(--text-light);
+            line-height: 1.7;
+        }
+
+        .features-grid {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 3rem;
+        }
+
+        .feature-card {
+            padding: 0;
+            background: var(--bg-light);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            transition: all 0.4s;
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUpScroll 0.6s ease forwards;
+        }
+
+        .feature-card:nth-child(1) { animation-delay: 0.1s; }
+        .feature-card:nth-child(2) { animation-delay: 0.2s; }
+        .feature-card:nth-child(3) { animation-delay: 0.3s; }
+        .feature-card:nth-child(4) { animation-delay: 0.4s; }
+        .feature-card:nth-child(5) { animation-delay: 0.5s; }
+        .feature-card:nth-child(6) { animation-delay: 0.6s; }
+
+        @keyframes fadeInUpScroll {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .feature-image-container {
+            width: 100%;
+            height: 200px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .feature-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s ease;
+        }
+
+        .feature-card:hover .feature-image {
+            transform: scale(1.1);
+        }
+
+        .feature-card > div:not(.feature-image-container),
+        .feature-card > h3,
+        .feature-card > p {
+            padding-left: 2.5rem;
+            padding-right: 2.5rem;
+        }
+
+        .feature-card > div.feature-icon {
+            margin-top: 2rem;
+            padding-left: 2.5rem;
+        }
+
+        .feature-card > h3 {
+            padding-top: 0;
+        }
+
+        .feature-card > p {
+            padding-bottom: 2.5rem;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: var(--accent);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.4s;
+        }
+
+        .feature-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.08);
+            background: white;
+        }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--accent) 0%, #c99f2e 100%);
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin-bottom: 1.5rem;
+            color: white;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .feature-card:hover .feature-icon {
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 10px 25px rgba(212, 175, 55, 0.3);
+        }
+
+        .feature-card h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .feature-card p {
+            color: var(--text-light);
+            line-height: 1.7;
+            font-size: 0.95rem;
+        }
+
+        /* How It Works */
+        .how-it-works {
+            padding: 8rem 3rem;
+            background: var(--bg-cream);
+        }
+
+        /* Visual Showcase Section */
+        .showcase-section {
+            padding: 2.5rem;
+            background: var(--primary);
+            overflow: hidden;
+        }
+
+        .showcase-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(3, 260px);
+            gap: 12px;
+            max-width: 1400px;
+            margin: 0 auto;
+            grid-template-areas:
+                "hero hero a b"
+                "hero hero c d"
+                "wide wide e f";
+        }
+
+        .showcase-item {
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            border-radius: 12px;
+        }
+
+        .showcase-hero { grid-area: hero; }
+        .showcase-a { grid-area: a; }
+        .showcase-b { grid-area: b; }
+        .showcase-c { grid-area: c; }
+        .showcase-d { grid-area: d; }
+        .showcase-wide { grid-area: wide; }
+        .showcase-e { grid-area: e; }
+        .showcase-f { grid-area: f; }
+
+        .showcase-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.6s ease;
+            border-radius: 12px;
+        }
+
+        .showcase-item:hover img {
+            transform: scale(1.1);
+        }
+
+        .showcase-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 2rem;
+            background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%);
+            color: white;
+            transform: translateY(100%);
+            transition: transform 0.4s ease;
+        }
+
+        .showcase-item:hover .showcase-overlay {
+            transform: translateY(0);
+        }
+
+        .showcase-overlay h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--accent);
+        }
+
+        .showcase-overlay p {
+            font-size: 0.95rem;
+            color: rgba(255,255,255,0.9);
+        }
+
+        @media (max-width: 1024px) {
+            .showcase-grid {
+                grid-template-columns: repeat(2, 1fr);
+                grid-template-rows: repeat(5, 240px);
+                grid-template-areas:
+                    "hero hero"
+                    "a b"
+                    "c d"
+                    "wide wide"
+                    "e f";
+            }
+        }
+
+        @media (max-width: 768px) {
+            .showcase-grid {
+                grid-template-columns: 1fr;
+                grid-template-rows: repeat(8, 230px);
+                grid-template-areas:
+                    "hero"
+                    "a"
+                    "b"
+                    "c"
+                    "d"
+                    "wide"
+                    "e"
+                    "f";
+            }
+        }
+
+        .steps-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+            position: relative;
+        }
+
+        .steps-container::before {
+            content: '';
+            position: absolute;
+            top: 40px;
+            left: 10%;
+            right: 10%;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent) 0%, var(--accent) 100%);
+            opacity: 0.3;
+            z-index: 0;
+        }
+
+        .step {
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .step-number {
+            width: 80px;
+            height: 80px;
+            background: white;
+            border: 3px solid var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent);
+            margin: 0 auto 1.5rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .step h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.3rem;
+            color: var(--primary);
+            margin-bottom: 0.75rem;
+        }
+
+        .step p {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        /* Testimonials */
+        .testimonials {
+            padding: 8rem 3rem;
+            background: white;
+        }
+
+        /* Trust Badges Section */
+        .trust-section {
+            padding: 4rem 3rem;
+            background: var(--bg-cream);
+            border-top: 1px solid var(--border);
+        }
+
+        .trust-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .trust-label {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            margin-bottom: 2rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .trust-badges {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .trust-badge {
+            background: white;
+            padding: 1rem 2rem;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--text);
+            transition: all 0.3s;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .trust-badge:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            border-color: var(--accent);
+        }
+
+        .testimonials-grid {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2.5rem;
+        }
+
+        .testimonial-card {
+            background: var(--bg-light);
+            padding: 2.5rem;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+            position: relative;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUpScroll 0.6s ease forwards;
+            transition: all 0.3s;
+        }
+
+        .testimonial-card:nth-child(1) { animation-delay: 0.1s; }
+        .testimonial-card:nth-child(2) { animation-delay: 0.2s; }
+        .testimonial-card:nth-child(3) { animation-delay: 0.3s; }
+
+        .testimonial-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.08);
+        }
+
+        .quote-mark {
+            font-family: 'Playfair Display', serif;
+            font-size: 5rem;
+            color: var(--accent);
+            opacity: 0.2;
+            position: absolute;
+            top: 1rem;
+            left: 1.5rem;
+            line-height: 1;
+        }
+
+        .testimonial-text {
+            position: relative;
+            z-index: 1;
+            font-size: 1rem;
+            line-height: 1.7;
+            color: var(--text);
+            margin-bottom: 1.5rem;
+            font-style: italic;
+        }
+
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .author-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent) 0%, #c99f2e 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 1.2rem;
+        }
+
+        .author-avatar-img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--accent);
+        }
+
+        .author-info h4 {
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .author-info p {
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+
+        /* Pricing */
+        .pricing {
+            padding: 8rem 3rem;
+            background: var(--bg-cream);
+        }
+
+        /* FAQ Section */
+        .faq-section {
+            padding: 8rem 3rem;
+            background: white;
+        }
+
+        .faq-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .faq-item {
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: var(--bg-light);
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .faq-item:hover {
+            border-color: var(--accent);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+        }
+
+        .faq-question {
+            width: 100%;
+            padding: 1.75rem 2rem;
+            background: none;
+            border: none;
+            text-align: left;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--primary);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+            font-family: 'Work Sans', sans-serif;
+        }
+
+        .faq-question:hover {
+            color: var(--accent);
+        }
+
+        .faq-icon {
+            font-size: 1.5rem;
+            font-weight: 300;
+            color: var(--accent);
+            transition: transform 0.3s;
+            flex-shrink: 0;
+            margin-left: 1rem;
+        }
+
+        .faq-item.active .faq-icon {
+            transform: rotate(45deg);
+        }
+
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+            padding: 0 2rem;
+        }
+
+        .faq-item.active .faq-answer {
+            max-height: 500px;
+            padding: 0 2rem 1.75rem 2rem;
+        }
+
+        .faq-answer p {
+            color: var(--text-light);
+            line-height: 1.7;
+            font-size: 0.95rem;
+        }
+
+        .pricing-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2.5rem;
+        }
+
+        .pricing-card {
+            background: white;
+            padding: 3rem 2.5rem;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+            text-align: center;
+            transition: all 0.4s;
+            position: relative;
+        }
+
+        .pricing-card.featured {
+            transform: scale(1.05);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.12);
+            border-color: var(--accent);
+        }
+
+        .pricing-card.featured::before {
+            content: 'Most Popular';
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--accent);
+            color: var(--primary);
+            padding: 0.5rem 1.5rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+        }
+
+        .plan-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .plan-price {
+            font-family: 'Playfair Display', serif;
+            font-size: 3.5rem;
+            color: var(--accent);
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .plan-price span {
+            font-size: 1.2rem;
+            color: var(--text-light);
+            font-weight: 400;
+        }
+
+        .plan-description {
+            color: var(--text-light);
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+        }
+
+        .plan-features {
+            list-style: none;
+            margin-bottom: 2rem;
+            text-align: left;
+        }
+
+        .plan-features li {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.9rem;
+        }
+
+        .plan-features li:last-child {
+            border-bottom: none;
+        }
+
+        .btn-plan {
+            width: 100%;
+            padding: 1rem;
+            background: var(--primary);
+            color: var(--accent);
+            border: none;
+            border-radius: 2px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1rem;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-plan:hover {
+            background: var(--accent);
+            color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        /* CTA Section */
+        .cta-section {
+            padding: 6rem 3rem;
+            background: linear-gradient(135deg, var(--primary) 0%, #2c2c2c 100%);
+            text-align: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-background-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(circle at 20% 30%, rgba(212, 175, 55, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(212, 175, 55, 0.1) 0%, transparent 50%),
+                url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d4af37' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            opacity: 0.3;
+        }
+
+        .cta-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(212, 175, 55, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .cta-content {
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .cta-content h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--accent);
+        }
+
+        .cta-content p {
+            font-size: 1.2rem;
+            margin-bottom: 2.5rem;
+            color: rgba(255,255,255,0.8);
+            line-height: 1.7;
+        }
+
+        .cta-form {
+            display: flex;
+            gap: 1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .cta-input {
+            flex: 1;
+            padding: 1.2rem 1.5rem;
+            border: 2px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.05);
+            color: white;
+            border-radius: 2px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .cta-input::placeholder {
+            color: rgba(255,255,255,0.5);
+        }
+
+        .cta-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            background: rgba(255,255,255,0.1);
+        }
+
+        .cta-button {
+            padding: 1.2rem 2.5rem;
+            background: var(--accent);
+            color: var(--primary);
+            border: none;
+            border-radius: 2px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1rem;
+            letter-spacing: 0.5px;
+        }
+
+        .cta-button:hover {
+            background: white;
+            transform: translateY(-2px);
+        }
+
+        /* Footer */
+        footer {
+            background: var(--primary);
+            color: rgba(255,255,255,0.7);
+            padding: 4rem 3rem 2rem;
+        }
+
+        /* Live Chat Button */
+        .live-chat-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--accent) 0%, #c99f2e 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(212, 175, 55, 0.4);
+            transition: all 0.3s;
+            z-index: 1000;
+            border: none;
+            animation: bounce 2s infinite;
+        }
+
+        .live-chat-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 15px 40px rgba(212, 175, 55, 0.5);
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .live-chat-btn::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            right: -3px;
+            width: 18px;
+            height: 18px;
+            background: #ff4444;
+            border-radius: 50%;
+            border: 3px solid white;
+            animation: pulse-dot 1.5s infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+            gap: 3rem;
+            margin-bottom: 3rem;
+        }
+
+        footer {
+            background: linear-gradient(135deg, #151515 0%, #1f1f1f 100%);
+            color: rgba(255,255,255,0.75);
+            padding: 4.5rem 3rem 2.5rem;
+            border-top: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .footer-brand h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            color: var(--accent);
+            margin-bottom: 1rem;
+        }
+
+        .footer-brand p {
+            font-size: 0.9rem;
+            line-height: 1.7;
+            margin-bottom: 1.5rem;
+        }
+
+        .footer-contact {
+            font-size: 0.9rem;
+            line-height: 1.8;
+            color: rgba(255,255,255,0.7);
+        }
+
+        .footer-contact a {
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-contact a:hover {
+            color: var(--accent);
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .social-links a {
+            width: 40px;
+            height: 40px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .social-links a:hover {
+            background: var(--accent);
+            color: var(--primary);
+            transform: translateY(-3px);
+        }
+
+        .footer-links h4 {
+            color: white;
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+        }
+
+        .footer-links ul {
+            list-style: none;
+        }
+
+        .footer-links ul li {
+            margin-bottom: 0.75rem;
+        }
+
+        .footer-links ul li a {
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            transition: color 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .footer-links ul li a:hover {
+            color: var(--accent);
+        }
+
+        .footer-bottom {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1.5rem;
+            font-size: 0.85rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-bottom-links {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-bottom-links a {
+            color: rgba(255,255,255,0.6);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-bottom-links a:hover {
+            color: var(--accent);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .hero-content {
+                grid-template-columns: 1fr;
+                gap: 3rem;
+            }
+
+            .hero-text h1 {
+                font-size: 3.5rem;
+            }
+
+            .features-grid,
+            .testimonials-grid,
+            .pricing-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .steps-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .steps-container::before {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            nav {
+                padding: 1.5rem;
+            }
+
+            .nav-links {
+                position: fixed;
+                top: 85px;
+                left: 0;
+                right: 0;
+                background: var(--bg-light);
+                flex-direction: column;
+                gap: 0;
+                padding: 2rem;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+                transform: translateY(-120%);
+                transition: transform 0.3s ease;
+                z-index: 999;
+            }
+
+            .nav-links.active {
+                transform: translateY(0);
+            }
+
+            .nav-links li {
+                padding: 1rem 0;
+                border-bottom: 1px solid var(--border);
+            }
+
+            .nav-links li:last-child {
+                border-bottom: none;
+            }
+
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .auth-dropdown {
+                display: none;
+            }
+
+            .hero-text h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero-text p {
+                font-size: 1.1rem;
+            }
+
+            .features-grid,
+            .testimonials-grid,
+            .pricing-grid,
+            .steps-container {
+                grid-template-columns: 1fr;
+            }
+
+            .section-title {
+                font-size: 2.2rem;
+            }
+
+            .cta-form {
+                flex-direction: column;
+            }
+
+            .footer-content {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .footer-bottom {
+                justify-content: center;
+                text-align: center;
+            }
+
+            .pricing-card.featured {
+                transform: scale(1);
+            }
+
+            .trust-badges {
+                gap: 1rem;
+            }
+
+            .trust-badge {
+                font-size: 0.85rem;
+                padding: 0.75rem 1.5rem;
+            }
+
+            .live-chat-btn {
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+                bottom: 20px;
+                right: 20px;
+            }
+
+            .faq-question {
+                font-size: 1rem;
+                padding: 1.5rem 1.5rem;
+            }
+
+            .faq-answer {
+                padding: 0 1.5rem;
+            }
+
+            .faq-item.active .faq-answer {
+                padding: 0 1.5rem 1.5rem 1.5rem;
+            }
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        * {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Focus styles for accessibility */
+        a:focus,
+        button:focus,
+        input:focus {
+            outline: 3px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        /* Loading state */
+        .loading {
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        .loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            margin: -10px 0 0 -10px;
+            border: 2px solid var(--accent);
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Pulse animation for CTA buttons */
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4); }
+            50% { box-shadow: 0 0 0 15px rgba(212, 175, 55, 0); }
+        }
+
+        .btn-primary:hover,
+        .cta-button:hover {
+            animation: pulse 1.5s infinite;
+        }
+
+        /* Tooltip enhancement */
+        [data-tooltip] {
+            position: relative;
+            cursor: help;
+        }
+
+        [data-tooltip]::before {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%) translateY(-10px);
+            padding: 0.5rem 1rem;
+            background: var(--primary);
+            color: var(--accent);
+            font-size: 0.85rem;
+            border-radius: 4px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        [data-tooltip]::after {
+            content: '';
+            position: absolute;
+            bottom: 115%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: var(--primary);
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s;
+        }
+
+        [data-tooltip]:hover::before,
+        [data-tooltip]:hover::after {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+    </style>
+</head>
+<body id="top">
+    <!-- Header -->
+    <header>
+        <nav>
+            <div class="logo">Cater<span>Flow</span></div>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#top">Home</a></li>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#how-it-works">How It Works</a></li>
+                <li><a href="#pricing">Pricing</a></li>
+                <li><a href="#testimonials">Testimonials</a></li>
+            </ul>
+            <a href="#" class="cta-nav" id="loginBtn">Log In</a>
+            <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-text">
+                <h1>Streamline Your <span class="highlight">Catering Business</span> From Order to Delivery</h1>
+                <p>The all-in-one platform that helps catering professionals manage events, menus, orders, and teams with elegance and efficiency.</p>
+                <div class="cta-group">
+                    <a href="#" class="btn-primary">Get Started Free</a>
+                    <a href="#" class="btn-secondary">Watch Demo</a>
+                </div>
+            </div>
+            <div class="hero-image">
+                <div class="hero-image-wrapper">
+                    <img src="https://images.unsplash.com/photo-1555244162-803834f70033?w=800&h=600&fit=crop&q=80" alt="Elegant catering setup" class="main-hero-img" loading="eager">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Trusted By Section -->
+    <section class="trusted-by-section">
+        <div class="trusted-by-container">
+            <p class="trusted-by-label">Trusted by leading catering companies worldwide</p>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <div class="section-header">
+            <div class="section-label">Features</div>
+            <h2 class="section-title">Everything You Need to Succeed</h2>
+            <p class="section-description">Powerful tools designed specifically for catering professionals who demand excellence.</p>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-image-container">
+                    <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=300&fit=crop&q=80" alt="Event Management" class="feature-image" loading="lazy">
+                </div>
+                <div class="feature-icon">📅</div>
+                <h3>Event Management</h3>
+                <p>Schedule, track, and manage all your catering events from a single dashboard. Never miss a booking or deadline again.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-image-container">
+                    <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=400&h=300&fit=crop&q=80" alt="Menu Builder" class="feature-image" loading="lazy">
+                </div>
+                <div class="feature-icon">🍽️</div>
+                <h3>Menu Builder</h3>
+                <p>Create stunning digital menus with pricing, dietary info, and seasonal options. Update instantly across all platforms.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-image-container">
+                    <img src="https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=400&h=300&fit=crop&q=80" alt="Client Portal" class="feature-image" loading="lazy">
+                </div>
+                <div class="feature-icon">👥</div>
+                <h3>Client Portal</h3>
+                <p>Give clients 24/7 access to book events, customize menus, and track orders through a beautiful branded portal.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-image-container">
+                    <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop&q=80" alt="Analytics & Reports" class="feature-image" loading="lazy">
+                </div>
+                <div class="feature-icon">📊</div>
+                <h3>Analytics & Reports</h3>
+                <p>Gain insights into your business with detailed reports on revenue, popular items, and customer trends.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-image-container">
+                    <img src="https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=400&h=300&fit=crop&q=80" alt="Payment Processing" class="feature-image" loading="lazy">
+                </div>
+                <div class="feature-icon">💰</div>
+                <h3>Payment Processing</h3>
+                <p>Accept deposits and payments seamlessly with integrated payment processing and automated invoicing.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-image-container">
+                    <img src="https://images.unsplash.com/photo-1578575437130-527eed3abbec?w=400&h=300&fit=crop&q=80" alt="Logistics Tracking" class="feature-image" loading="lazy">
+                </div>
+                <div class="feature-icon">🚚</div>
+                <h3>Logistics Tracking</h3>
+                <p>Coordinate staff, equipment, and deliveries with GPS tracking and real-time status updates.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section id="how-it-works" class="how-it-works">
+        <div class="section-header">
+            <div class="section-label">How It Works</div>
+            <h2 class="section-title">Get Started in Minutes</h2>
+            <p class="section-description">Four simple steps to transform your catering operation.</p>
+        </div>
+        <div class="steps-container">
+            <div class="step">
+                <div class="step-number">1</div>
+                <h3>Create Account</h3>
+                <p>Sign up in seconds and customize your profile with your branding and preferences.</p>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <h3>Build Your Menu</h3>
+                <p>Add your dishes, set pricing, and organize categories with our intuitive menu builder.</p>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <h3>Accept Bookings</h3>
+                <p>Share your client portal and start receiving event requests and orders automatically.</p>
+            </div>
+            <div class="step">
+                <div class="step-number">4</div>
+                <h3>Deliver Excellence</h3>
+                <p>Manage events, coordinate your team, and delight customers with seamless execution.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Visual Showcase -->
+    <section class="showcase-section">
+        <div class="showcase-grid">
+            <div class="showcase-item showcase-hero">
+                <img src="https://images.unsplash.com/photo-1555244162-803834f70033?auto=format&fit=crop&w=1200&h=1200&q=90" alt="Elegant catering display" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1200&h=1200&q=90';">
+                <div class="showcase-overlay">
+                    <h3>Elegant Events</h3>
+                    <p>From intimate gatherings to grand celebrations</p>
+                </div>
+            </div>
+            <div class="showcase-item showcase-a">
+                <img src="https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?auto=format&fit=crop&w=800&h=800&q=90" alt="Gourmet food presentation" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1496412705862-e0088f16f791?auto=format&fit=crop&w=800&h=800&q=90';">
+                <div class="showcase-overlay">
+                    <h3>Gourmet Quality</h3>
+                    <p>Premium culinary experiences</p>
+                </div>
+            </div>
+            <div class="showcase-item showcase-b">
+                <img src="https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=800&h=800&q=90" alt="Professional service" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1528712306091-ed0763094c98?auto=format&fit=crop&w=800&h=800&q=90';">
+                <div class="showcase-overlay">
+                    <h3>Professional Service</h3>
+                    <p>Impeccable attention to detail</p>
+                </div>
+            </div>
+            <div class="showcase-item showcase-c">
+                <img src="https://images.unsplash.com/photo-1530103862676-de8c9debad1d?auto=format&fit=crop&w=800&h=800&q=90" alt="Creative presentations" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=800&h=800&q=90';">
+                <div class="showcase-overlay">
+                    <h3>Creative Presentations</h3>
+                    <p>Making every moment memorable</p>
+                </div>
+            </div>
+            <div class="showcase-item showcase-wide">
+                <img src="https://images.unsplash.com/photo-1560963689-1942a9b17fbc?auto=format&fit=crop&w=1200&h=800&q=90" alt="Corporate catering" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1466978913421-dad2ebd01d17?auto=format&fit=crop&w=1200&h=800&q=90';">
+                <div class="showcase-overlay">
+                    <h3>Corporate Excellence</h3>
+                    <p>Trusted by leading businesses worldwide</p>
+                </div>
+            </div>
+            <div class="showcase-item showcase-d">
+                <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=800&h=800&q=90" alt="Chef plating" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?auto=format&fit=crop&w=800&h=800&q=90';">
+                <div class="showcase-overlay">
+                    <h3>Chef Craftsmanship</h3>
+                    <p>Precision in every detail</p>
+                </div>
+            </div>
+            <div class="showcase-item showcase-e">
+                <img src="https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?auto=format&fit=crop&w=800&h=800&q=90" alt="Dessert table" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?auto=format&fit=crop&w=800&h=800&q=90';">
+                <div class="showcase-overlay">
+                    <h3>Signature Desserts</h3>
+                    <p>Elegant sweet finishes</p>
+                </div>
+            </div>
+            <div class="showcase-item showcase-f">
+                <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&h=800&q=90" alt="Buffet service" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1555244162-803834f70033?auto=format&fit=crop&w=800&h=800&q=90';">
+                <div class="showcase-overlay">
+                    <h3>Buffet Service</h3>
+                    <p>Seamless guest experience</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section id="testimonials" class="testimonials">
+        <div class="section-header">
+            <div class="section-label">Testimonials</div>
+            <h2 class="section-title">Loved by Catering Professionals</h2>
+            <p class="section-description">See what our customers have to say about transforming their business.</p>
+        </div>
+        <div class="testimonials-grid">
+            <div class="testimonial-card">
+                <div class="quote-mark">"</div>
+                <p class="testimonial-text">CaterFlow has completely transformed how we manage events. We've cut our admin time in half and increased bookings by 40%.</p>
+                <div class="testimonial-author">
+                    <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&q=80" alt="Sarah Martinez" class="author-avatar-img">
+                    <div class="author-info">
+                        <h4>Sarah Martinez</h4>
+                        <p>Owner, Gourmet Events Co.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-card">
+                <div class="quote-mark">"</div>
+                <p class="testimonial-text">The client portal is a game-changer. Our customers love being able to customize their orders and track everything online.</p>
+                <div class="testimonial-author">
+                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&q=80" alt="James Chen" class="author-avatar-img">
+                    <div class="author-info">
+                        <h4>James Chen</h4>
+                        <p>Manager, Elite Catering</p>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-card">
+                <div class="quote-mark">"</div>
+                <p class="testimonial-text">Best investment we've made. The analytics help us understand our business better and make smarter decisions every day.</p>
+                <div class="testimonial-author">
+                    <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&q=80" alt="Rachel Peters" class="author-avatar-img">
+                    <div class="author-info">
+                        <h4>Rachel Peters</h4>
+                        <p>CEO, Premier Catering Group</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Trust Badges -->
+    <section class="trust-section">
+        <div class="trust-container">
+            <p class="trust-label">Trusted by industry leaders and certified by</p>
+            <div class="trust-badges">
+                <div class="trust-badge">🔒 SSL Secured</div>
+                <div class="trust-badge">✓ GDPR Compliant</div>
+                <div class="trust-badge">⭐ SOC 2 Type II</div>
+                <div class="trust-badge">🏆 99.9% Uptime</div>
+                <div class="trust-badge">💳 PCI DSS</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing -->
+    <section id="pricing" class="pricing">
+        <div class="section-header">
+            <div class="section-label">Pricing</div>
+            <h2 class="section-title">Choose Your Plan</h2>
+            <p class="section-description">Flexible pricing that grows with your business. All plans include 14-day free trial.</p>
+        </div>
+        <div class="pricing-grid">
+            <div class="pricing-card">
+                <h3 class="plan-name">Starter</h3>
+                <div class="plan-price">$49<span>/month</span></div>
+                <p class="plan-description">Perfect for small catering businesses</p>
+                <ul class="plan-features">
+                    <li><span class="check-icon">✓</span> Up to 25 events/month</li>
+                    <li><span class="check-icon">✓</span> Basic menu builder</li>
+                    <li><span class="check-icon">✓</span> Client portal</li>
+                    <li><span class="check-icon">✓</span> Email support</li>
+                    <li><span class="check-icon">✓</span> Basic analytics</li>
+                </ul>
+                <button class="btn-plan">Start Free Trial</button>
+            </div>
+            <div class="pricing-card featured">
+                <h3 class="plan-name">Professional</h3>
+                <div class="plan-price">$99<span>/month</span></div>
+                <p class="plan-description">For growing catering businesses</p>
+                <ul class="plan-features">
+                    <li><span class="check-icon">✓</span> Unlimited events</li>
+                    <li><span class="check-icon">✓</span> Advanced menu builder</li>
+                    <li><span class="check-icon">✓</span> Branded client portal</li>
+                    <li><span class="check-icon">✓</span> Priority support</li>
+                    <li><span class="check-icon">✓</span> Advanced analytics</li>
+                    <li><span class="check-icon">✓</span> Payment processing</li>
+                    <li><span class="check-icon">✓</span> Team management</li>
+                </ul>
+                <button class="btn-plan">Start Free Trial</button>
+            </div>
+            <div class="pricing-card">
+                <h3 class="plan-name">Enterprise</h3>
+                <div class="plan-price">$249<span>/month</span></div>
+                <p class="plan-description">For large-scale operations</p>
+                <ul class="plan-features">
+                    <li><span class="check-icon">✓</span> Everything in Professional</li>
+                    <li><span class="check-icon">✓</span> White-label solution</li>
+                    <li><span class="check-icon">✓</span> API access</li>
+                    <li><span class="check-icon">✓</span> Dedicated account manager</li>
+                    <li><span class="check-icon">✓</span> Custom integrations</li>
+                    <li><span class="check-icon">✓</span> Advanced security</li>
+                    <li><span class="check-icon">✓</span> SLA guarantee</li>
+                </ul>
+                <button class="btn-plan">Contact Sales</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="faq-section">
+        <div class="section-header">
+            <div class="section-label">FAQ</div>
+            <h2 class="section-title">Frequently Asked Questions</h2>
+            <p class="section-description">Everything you need to know about CaterFlow</p>
+        </div>
+        <div class="faq-container">
+            <div class="faq-item">
+                <button class="faq-question">
+                    <span>How does the free trial work?</span>
+                    <span class="faq-icon">+</span>
+                </button>
+                <div class="faq-answer">
+                    <p>You get full access to all features of your chosen plan for 14 days. No credit card required to start. If you decide to continue after the trial, you'll be prompted to add payment details.</p>
+                </div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-question">
+                    <span>Can I change plans later?</span>
+                    <span class="faq-icon">+</span>
+                </button>
+                <div class="faq-answer">
+                    <p>Absolutely! You can upgrade or downgrade your plan at any time. Changes take effect immediately, and we'll prorate the billing accordingly.</p>
+                </div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-question">
+                    <span>Is my data secure?</span>
+                    <span class="faq-icon">+</span>
+                </button>
+                <div class="faq-answer">
+                    <p>Yes! We use bank-level encryption (256-bit SSL), are SOC 2 Type II certified, and are fully GDPR compliant. Your data is backed up daily and stored in secure, redundant data centers.</p>
+                </div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-question">
+                    <span>Do you offer training and support?</span>
+                    <span class="faq-icon">+</span>
+                </button>
+                <div class="faq-answer">
+                    <p>Yes! All plans include comprehensive onboarding, video tutorials, and email support. Professional and Enterprise plans get priority support and dedicated account managers.</p>
+                </div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-question">
+                    <span>Can I integrate CaterFlow with other tools?</span>
+                    <span class="faq-icon">+</span>
+                </button>
+                <div class="faq-answer">
+                    <p>Yes! We integrate with popular tools like QuickBooks, Stripe, Mailchimp, Google Calendar, and many more. Enterprise plans include API access for custom integrations.</p>
+                </div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-question">
+                    <span>What happens if I cancel?</span>
+                    <span class="faq-icon">+</span>
+                </button>
+                <div class="faq-answer">
+                    <p>You can cancel anytime with no penalties. You'll retain access until the end of your billing period, and you can export all your data before leaving.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="cta-background-pattern"></div>
+        <div class="cta-content">
+            <h2>Ready to Transform Your Catering Business?</h2>
+            <p>Join thousands of catering professionals who trust CaterFlow to manage their operations. Start your free 14-day trial today.</p>
+            <form class="cta-form">
+                <input type="email" class="cta-input" placeholder="Enter your email address">
+                <button type="submit" class="cta-button">Start Free Trial</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Login Modal -->
+    <div class="modal-backdrop" id="loginModal" aria-hidden="true">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="loginModalTitle">
+            <div class="modal-header">
+                <h3 class="modal-title" id="loginModalTitle">Log In</h3>
+                <button class="modal-close" type="button" aria-label="Close" id="loginModalClose">×</button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-subtitle">Use one login form for customer, staff, and admin access.</p>
+                <form class="modal-form" id="loginForm">
+                    <div class="form-group">
+                        <label for="loginEmail">Username or Email *</label>
+                        <input type="text" id="loginEmail" name="email" placeholder="e.g., admin or john@example.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">Password *</label>
+                        <div class="password-group">
+                            <input type="password" id="loginPassword" name="password" class="password-input" required>
+                            <button type="button" class="password-toggle" aria-label="Show password" data-toggle="password">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path class="eye" d="M2 12s3.6-6.5 10-6.5 10 6.5 10 6.5-3.6 6.5-10 6.5S2 12 2 12z"></path>
+                                    <circle class="pupil" cx="12" cy="12" r="2.7"></circle>
+                                    <path class="eye-slash" d="M4 4l16 16"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="loginError" class="form-error" style="display:none;"></div>
+
+                    <div class="modal-actions">
+                        <button type="submit" class="modal-submit" id="loginSubmitBtn">
+                            <span class="btn-text">Log In</span>
+                            <span class="btn-loader" style="display:none;">⟳</span>
+                        </button>
+                        <button type="button" class="modal-secondary" id="openRegisterBtn">Register as Customer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customer Registration Modal -->
+    <div class="modal-backdrop" id="registerModal" aria-hidden="true">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="registerModalTitle">
+            <div class="modal-header">
+                <h3 class="modal-title" id="registerModalTitle">Client Registration</h3>
+                <button class="modal-close" type="button" aria-label="Close" id="registerModalClose">×</button>
+            </div>
+            <div class="modal-body">
+                <form class="modal-form" id="registerForm">
+                    <input type="hidden" name="csrf_token" id="registerCsrfToken" value="">
+
+                    <div class="form-section-title">Client Profile</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="regFullname">Full Name *</label>
+                            <input type="text" id="regFullname" name="fullname" placeholder="e.g., Jane Marie Cruz" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="regUsername">Username *</label>
+                            <input type="text" id="regUsername" name="username" placeholder="e.g., jane_catering" required>
+                        </div>
+                    </div>
+
+                    <div class="form-section-title">Contact & Location</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="regEmail">Email Address *</label>
+                            <input type="email" id="regEmail" name="email" placeholder="e.g., jane@example.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="regPhone">Mobile Number *</label>
+                            <input type="tel" id="regPhone" name="phone" placeholder="e.g., +1 (555) 123-4567" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="regAddress">Street Address</label>
+                        <input type="text" id="regAddress" name="address" placeholder="Building, street, barangay / district">
+                        <span class="form-hint">Optional, but helps with delivery estimates.</span>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="regCity">City</label>
+                            <input type="text" id="regCity" name="city" placeholder="e.g., Los Angeles">
+                        </div>
+                        <div class="form-group">
+                            <label for="regProvince">State / Province</label>
+                            <input type="text" id="regProvince" name="province" placeholder="e.g., California">
+                        </div>
+                    </div>
+
+                    <div class="form-section-title">Login Security</div>
+                    <div class="form-group">
+                        <label for="regPassword">Password *</label>
+                        <div class="password-group">
+                            <input type="password" id="regPassword" name="password" class="password-input" required>
+                            <button type="button" class="password-toggle" aria-label="Show password" data-toggle="password">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path class="eye" d="M2 12s3.6-6.5 10-6.5 10 6.5 10 6.5-3.6 6.5-10 6.5S2 12 2 12z"></path>
+                                    <circle class="pupil" cx="12" cy="12" r="2.7"></circle>
+                                    <path class="eye-slash" d="M4 4l16 16"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <span class="form-hint">Use at least 8 characters with uppercase, lowercase, and number.</span>
+                        <div class="password-strength" id="passwordStrength">
+                            <div class="password-meter">
+                                <div class="password-meter-bar"></div>
+                            </div>
+                            <div class="password-requirements" id="passwordReqs">
+                                <div class="req-item" id="req-length">At least 8 characters</div>
+                                <div class="req-item" id="req-upper">One uppercase letter (A-Z)</div>
+                                <div class="req-item" id="req-lower">One lowercase letter (a-z)</div>
+                                <div class="req-item" id="req-number">One number (0-9)</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="regConfirmPassword">Confirm Password *</label>
+                        <div class="password-group">
+                            <input type="password" id="regConfirmPassword" name="confirm_password" class="password-input" required>
+                            <button type="button" class="password-toggle" aria-label="Show password" data-toggle="password">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path class="eye" d="M2 12s3.6-6.5 10-6.5 10 6.5 10 6.5-3.6 6.5-10 6.5S2 12 2 12z"></path>
+                                    <circle class="pupil" cx="12" cy="12" r="2.7"></circle>
+                                    <path class="eye-slash" d="M4 4l16 16"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="registerError" class="form-error" style="display:none;"></div>
+
+                    <div class="modal-actions">
+                        <button type="submit" class="modal-submit" id="registerSubmitBtn">
+                            <span class="btn-text">Create Account</span>
+                            <span class="btn-loader" style="display:none;">⟳</span>
+                        </button>
+                        <button type="button" class="modal-secondary" id="backToLoginBtn">Close</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <section class="staff-dashboard" id="staffDashboard" aria-live="polite">
+        <div class="section-header">
+            <div class="section-label">Staff Dashboard</div>
+            <h2 class="section-title">Daily Task Board</h2>
+            <p class="section-description">View assigned events, update progress, and coordinate delivery tasks.</p>
+        </div>
+    </section>
+
+    <section class="customer-dashboard" id="customerDashboard" aria-live="polite">
+        <div class="section-header">
+            <div class="section-label">Customer Dashboard</div>
+            <h2 class="section-title">My Catering Space</h2>
+            <p class="section-description">Manage bookings, update profile details, and track service requests.</p>
+        </div>
+    </section>
+
+
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-brand">
+                <h3>CaterFlow</h3>
+                <p>The professional catering management platform trusted by industry leaders worldwide.</p>
+                <div class="social-links">
+                    <a href="#">f</a>
+                    <a href="#">in</a>
+                    <a href="#">tw</a>
+                    <a href="#">ig</a>
+                </div>
+            </div>
+            <div class="footer-links">
+                <h4>Product</h4>
+                <ul>
+                    <li><a href="#">Features</a></li>
+                    <li><a href="#">Pricing</a></li>
+                    <li><a href="#">Integrations</a></li>
+                    <li><a href="#">API</a></li>
+                </ul>
+            </div>
+            <div class="footer-links">
+                <h4>Company</h4>
+                <ul>
+                    <li><a href="#">About Us</a></li>
+                    <li><a href="#">Careers</a></li>
+                    <li><a href="#">Blog</a></li>
+                    <li><a href="#">Press</a></li>
+                </ul>
+            </div>
+            <div class="footer-links">
+                <h4>Support</h4>
+                <ul>
+                    <li><a href="#">Help Center</a></li>
+                    <li><a href="#">Contact</a></li>
+                    <li><a href="#">Privacy</a></li>
+                    <li><a href="#">Terms</a></li>
+                </ul>
+            </div>
+            <div class="footer-links">
+                <h4>Contact</h4>
+                <div class="footer-contact">
+                    <div>1234 Culinary Ave, Suite 200</div>
+                    <div>Los Angeles, CA 90015</div>
+                    <div><a href="mailto:hello@caterflow.com">hello@caterflow.com</a></div>
+                    <div><a href="tel:+12135550198">+1 (213) 555-0198</a></div>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 CaterFlow. All rights reserved.</p>
+            <div class="footer-bottom-links">
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Service</a>
+                <a href="#">Security</a>
+            </div>
+        </div>
+    </footer>
+    <script>
+        // Mobile Menu Toggle
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const navLinks = document.getElementById('navLinks');
+
+        mobileMenuBtn.addEventListener('click', () => {
+            mobileMenuBtn.classList.toggle('active');
+            navLinks.classList.toggle('active');
+        });
+
+        // Close mobile menu when clicking on a link
+        document.querySelectorAll('.nav-links a').forEach(link => {
+            link.addEventListener('click', () => {
+                mobileMenuBtn.classList.remove('active');
+                navLinks.classList.remove('active');
+            });
+        });
+
+        // Animated Counter for Stats
+        const animateCounter = (element, target, duration = 2000) => {
+            const start = 0;
+            const increment = target / (duration / 16);
+            let current = start;
+
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= target) {
+                    element.textContent = formatNumber(target);
+                    clearInterval(timer);
+                } else {
+                    element.textContent = formatNumber(Math.floor(current));
+                }
+            }, 16);
+        };
+
+        const formatNumber = (num) => {
+            if (num >= 1000) {
+                return (num / 1000).toFixed(0) + 'K+';
+            }
+            return num + '%';
+        };
+
+        // Intersection Observer for animations
+        const observerOptions = {
+            threshold: 0.2,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    
+                    // Animate counters when stats card is visible
+                    if (entry.target.classList.contains('stat-grid')) {
+                        const statNumbers = entry.target.querySelectorAll('.stat-number');
+                        statNumbers.forEach((stat, index) => {
+                            const text = stat.textContent;
+                            if (text.includes('K+')) {
+                                const num = parseInt(text.replace('K+', '')) * 1000;
+                                setTimeout(() => animateCounter(stat, num), index * 200);
+                            } else if (text.includes('%')) {
+                                const num = parseInt(text.replace('%', ''));
+                                setTimeout(() => {
+                                    animateCounter(stat, num);
+                                    stat.textContent = num + '%';
+                                }, index * 200);
+                            } else if (text.includes('24/7')) {
+                                // Keep as is
+                            }
+                        });
+                    }
+                }
+            });
+        }, observerOptions);
+
+        // Observe all animated elements
+        document.querySelectorAll('.feature-card, .testimonial-card, .stat-grid, .step').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Header shadow on scroll
+        const header = document.querySelector('header');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                header.style.boxShadow = '0 4px 20px rgba(0,0,0,0.08)';
+            } else {
+                header.style.boxShadow = 'none';
+            }
+        });
+
+        // Form submission handling
+        document.querySelector('.cta-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = e.target.querySelector('.cta-input').value;
+            if (email) {
+                alert('Thanks for your interest! We\'ll be in touch soon.');
+                e.target.reset();
+            }
+        });
+
+        // Pricing card interactions
+        document.querySelectorAll('.btn-plan').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const planName = btn.closest('.pricing-card').querySelector('.plan-name').textContent;
+                alert(`You selected the ${planName} plan. Redirecting to signup...`);
+            });
+        });
+
+        // Password visibility toggles
+        document.querySelectorAll('.password-toggle').forEach((toggleBtn) => {
+            const input = toggleBtn.closest('.password-group')?.querySelector('input');
+            if (!input) return;
+            toggleBtn.addEventListener('click', () => {
+                const isVisible = input.type === 'text';
+                input.type = isVisible ? 'password' : 'text';
+                toggleBtn.classList.toggle('is-visible', !isVisible);
+                toggleBtn.setAttribute('aria-label', isVisible ? 'Show password' : 'Hide password');
+            });
+        });
+
+        const loginBtn = document.getElementById('loginBtn');
+        const loginModal = document.getElementById('loginModal');
+        const loginModalClose = document.getElementById('loginModalClose');
+        const loginForm = document.getElementById('loginForm');
+        const loginSubmitBtn = document.getElementById('loginSubmitBtn');
+        const loginError = document.getElementById('loginError');
+        const openRegisterBtn = document.getElementById('openRegisterBtn');
+        const registerModal = document.getElementById('registerModal');
+        const registerModalClose = document.getElementById('registerModalClose');
+        const registerForm = document.getElementById('registerForm');
+        const backToLoginBtn = document.getElementById('backToLoginBtn');
+        const registerSubmitBtn = document.getElementById('registerSubmitBtn');
+        const registerError = document.getElementById('registerError');
+        const staffDashboard = document.getElementById('staffDashboard');
+        const customerDashboard = document.getElementById('customerDashboard');
+
+        const openLoginModal = () => {
+            loginModal.classList.add('active');
+            loginModal.setAttribute('aria-hidden', 'false');
+        };
+
+        const closeLoginModal = () => {
+            loginModal.classList.remove('active');
+            loginModal.setAttribute('aria-hidden', 'true');
+            loginForm.reset();
+            loginError.style.display = 'none';
+            loginSubmitBtn.disabled = false;
+            loginSubmitBtn.classList.remove('loading');
+            loginSubmitBtn.querySelector('.btn-text').style.display = 'inline';
+            loginSubmitBtn.querySelector('.btn-loader').style.display = 'none';
+        };
+
+        const setLoginError = (message) => {
+            loginError.textContent = message;
+            loginError.classList.remove('success');
+            loginError.style.display = 'flex';
+        };
+
+        const showDashboardByRole = (role) => {
+            staffDashboard.classList.remove('visible');
+            customerDashboard.classList.remove('visible');
+
+            if (role === 'admin') {
+                window.location.href = 'admin.php';
+                return;
+            }
+
+            if (role === 'staff') {
+                window.location.href = 'staff.php';
+                return;
+            }
+
+            window.location.href = 'customer.php';
+        };
+
+        loginBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            openLoginModal();
+        });
+
+        loginModalClose.addEventListener('click', closeLoginModal);
+
+        loginModal.addEventListener('click', (e) => {
+            if (e.target === loginModal) {
+                closeLoginModal();
+            }
+        });
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+
+            if (!email || !password) {
+                setLoginError('Please fill in all fields.');
+                return;
+            }
+
+            loginError.style.display = 'none';
+            loginSubmitBtn.disabled = true;
+            loginSubmitBtn.classList.add('loading');
+            loginSubmitBtn.querySelector('.btn-text').style.display = 'none';
+            loginSubmitBtn.querySelector('.btn-loader').style.display = 'inline';
+
+            try {
+                const formData = new FormData(loginForm);
+                const response = await fetch('login.php', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'same-origin'
+                });
+
+                let result = {};
+                try {
+                    result = await response.json();
+                } catch (err) {
+                    throw new Error('Invalid server response');
+                }
+
+                if (!response.ok || !result.success || !result.user?.role) {
+                    setLoginError(result.message || 'Login failed.');
+                    return;
+                }
+
+                closeLoginModal();
+                showDashboardByRole(result.user.role);
+            } catch (error) {
+                setLoginError('Unable to log in right now. Please try again.');
+                console.error('Login error:', error);
+            } finally {
+                loginSubmitBtn.disabled = false;
+                loginSubmitBtn.classList.remove('loading');
+                loginSubmitBtn.querySelector('.btn-text').style.display = 'inline';
+                loginSubmitBtn.querySelector('.btn-loader').style.display = 'none';
+            }
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (loginModal.classList.contains('active')) {
+                    closeLoginModal();
+                    return;
+                }
+                if (registerModal.classList.contains('active')) {
+                    closeRegisterModal();
+                }
+            }
+        });
+
+        const closeRegisterModal = () => {
+            registerModal.classList.remove('active');
+            registerModal.setAttribute('aria-hidden', 'true');
+            registerForm.reset();
+            registerError.style.display = 'none';
+        };
+
+        const openRegisterModal = () => {
+            registerModal.classList.add('active');
+            registerModal.setAttribute('aria-hidden', 'false');
+        };
+
+        openRegisterBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            closeLoginModal();
+            openRegisterModal();
+        });
+
+        registerModalClose.addEventListener('click', closeRegisterModal);
+
+        backToLoginBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            closeRegisterModal();
+        });
+
+        registerModal.addEventListener('click', (e) => {
+            if (e.target === registerModal) {
+                closeRegisterModal();
+            }
+        });
+
+        // Validation helper functions for registration
+        function validatePasswordStrength(password) {
+            const errors = [];
+            if (password.length < 8) {
+                errors.push('Must be at least 8 characters');
+            }
+            if (!/[A-Z]/.test(password)) {
+                errors.push('Must contain at least one uppercase letter');
+            }
+            if (!/[a-z]/.test(password)) {
+                errors.push('Must contain at least one lowercase letter');
+            }
+            if (!/[0-9]/.test(password)) {
+                errors.push('Must contain at least one number');
+            }
+            return errors;
+        }
+
+        function validateUsername(username) {
+            if (username.length < 3 || username.length > 20) {
+                return 'Username must be between 3 and 20 characters';
+            }
+            if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+                return 'Username can only contain letters, numbers, and underscores';
+            }
+            return null;
+        }
+
+        function validatePhone(phone) {
+            const digitsOnly = phone.replace(/\D/g, '');
+            if (!/^[0-9\-\+\(\)\s]+$/.test(phone) || digitsOnly.length < 7) {
+                return 'Invalid phone number format (minimum 7 digits)';
+            }
+            return null;
+        }
+
+        const setRegisterError = (message) => {
+            registerError.textContent = message;
+            registerError.classList.remove('success');
+            registerError.style.display = 'flex';
+        };
+
+        function validateRegistrationForm() {
+            const errors = [];
+            registerError.style.display = 'none';
+
+            const fullname = document.getElementById('regFullname').value.trim();
+            const username = document.getElementById('regUsername').value.trim();
+            const email = document.getElementById('regEmail').value.trim();
+            const phone = document.getElementById('regPhone').value.trim();
+            const password = document.getElementById('regPassword').value;
+            const confirmPassword = document.getElementById('regConfirmPassword').value;
+
+            if (!fullname) errors.push('Full name is required');
+            if (fullname && (fullname.length < 2 || fullname.length > 100)) {
+                errors.push('Full name must be 2-100 characters');
+            }
+
+            const usernameErr = validateUsername(username);
+            if (usernameErr) errors.push(usernameErr);
+
+            if (!email) errors.push('Email is required');
+            if (!phone) errors.push('Phone is required');
+
+            const phoneErr = validatePhone(phone);
+            if (phoneErr) errors.push(phoneErr);
+
+            if (!password || !confirmPassword) errors.push('Password fields are required');
+            if (password && confirmPassword && password !== confirmPassword) {
+                errors.push('Passwords do not match');
+            }
+
+            const passErrors = validatePasswordStrength(password);
+            if (passErrors.length > 0) errors.push(...passErrors);
+
+            if (errors.length > 0) {
+                setRegisterError(errors.join(' • '));
+                return false;
+            }
+
+            return true;
+        }
+
+        // Password strength indicator with real-time requirements
+        const passwordInput = document.getElementById('regPassword');
+        const passwordStrength = document.getElementById('passwordStrength');
+        
+        if (passwordInput) {
+            passwordInput.addEventListener('input', (e) => {
+                const password = e.target.value;
+                if (password.length === 0) {
+                    passwordStrength.classList.remove('show', 'weak', 'medium', 'strong');
+                    return;
+                }
+
+                passwordStrength.classList.add('show');
+                
+                // Update requirement checklist
+                const hasLength = password.length >= 8;
+                const hasUpper = /[A-Z]/.test(password);
+                const hasLower = /[a-z]/.test(password);
+                const hasNumber = /[0-9]/.test(password);
+                
+                document.getElementById('req-length').classList.toggle('met', hasLength);
+                document.getElementById('req-upper').classList.toggle('met', hasUpper);
+                document.getElementById('req-lower').classList.toggle('met', hasLower);
+                document.getElementById('req-number').classList.toggle('met', hasNumber);
+                
+                // Update strength level
+                const metRequirements = [hasLength, hasUpper, hasLower, hasNumber].filter(Boolean).length;
+                
+                passwordStrength.classList.remove('weak', 'medium', 'strong');
+                
+                if (metRequirements <= 1) {
+                    passwordStrength.classList.add('weak');
+                } else if (metRequirements <= 2) {
+                    passwordStrength.classList.add('medium');
+                } else {
+                    passwordStrength.classList.add('strong');
+                }
+            });
+        }
+
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (!validateRegistrationForm()) {
+                return;
+            }
+
+            // All validations passed, submit form
+            const allInputs = registerForm.querySelectorAll('input[type="text"], input[type="email"], input[type="tel"], input[type="password"]');
+            let allFilled = true;
+            for (let input of allInputs) {
+                if (input.name && !['address', 'city', 'province'].includes(input.name)) {
+                    if (!input.value.trim()) {
+                        allFilled = false;
+                        break;
+                    }
+                }
+            }
+
+            if (!allFilled) {
+                setRegisterError('Please fill in all required fields.');
+                return;
+            }
+
+            // Set loading state
+            registerSubmitBtn.disabled = true;
+            registerSubmitBtn.classList.add('loading');
+            registerSubmitBtn.querySelector('.btn-text').style.display = 'none';
+            registerSubmitBtn.querySelector('.btn-loader').style.display = 'inline';
+
+            try {
+                const formData = new FormData(registerForm);
+                
+                const csrfTokenElements = document.querySelectorAll('input[name="csrf_token"]');
+                for (let elem of csrfTokenElements) {
+                    if (elem.value && elem.value.length > 0) {
+                        formData.set('csrf_token', elem.value);
+                        break;
+                    }
+                }
+
+                const response = await fetch('register.php', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'same-origin'
+                });
+                
+                let result = {};
+                try {
+                    result = await response.json();
+                } catch (err) {
+                    throw new Error('Server response error');
+                }
+                
+                if (!response.ok || !result.success) {
+                    let errorMsg = result.message || 'Registration failed.';
+                    if (result.requirements && Array.isArray(result.requirements)) {
+                        errorMsg += ' ' + result.requirements.join(' • ');
+                    }
+                    setRegisterError(errorMsg);
+                    return;
+                }
+                
+                // Success! Show success message and redirect
+                registerError.textContent = 'Account created successfully! Redirecting to sign in...';
+                registerError.classList.add('success');
+                registerError.style.display = 'block';
+                
+                setTimeout(() => {
+                    closeRegisterModal();
+                    registerForm.reset();
+                    registerError.classList.remove('success');
+                }, 2000);
+            } catch (err) {
+                setRegisterError('Registration failed. Please try again later.');
+                console.error('Registration error:', err);
+            } finally {
+                // Reset loading state
+                registerSubmitBtn.disabled = false;
+                registerSubmitBtn.classList.remove('loading');
+                registerSubmitBtn.querySelector('.btn-text').style.display = 'inline';
+                registerSubmitBtn.querySelector('.btn-loader').style.display = 'none';
+            }
+        });
+
+        // FAQ Accordion
+        document.querySelectorAll('.faq-question').forEach(question => {
+            question.addEventListener('click', () => {
+                const faqItem = question.parentElement;
+                const isActive = faqItem.classList.contains('active');
+                
+                // Close all FAQ items
+                document.querySelectorAll('.faq-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+                
+                // Open clicked item if it wasn't active
+                if (!isActive) {
+                    faqItem.classList.add('active');
+                }
+            });
+        });
+
+        // Add parallax effect to hero background
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            const hero = document.querySelector('.hero');
+            if (hero && scrolled < window.innerHeight) {
+                hero.style.transform = `translateY(${scrolled * 0.5}px)`;
+            }
+        });
+
+        // Lazy loading effect for images (if you add images later)
+        if ('IntersectionObserver' in window) {
+            const imageObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const img = entry.target;
+                        img.src = img.dataset.src;
+                        img.classList.add('loaded');
+                        imageObserver.unobserve(img);
+                    }
+                });
+            });
+
+            document.querySelectorAll('img[data-src]').forEach(img => {
+                imageObserver.observe(img);
+            });
+        }
+    </script>
+</body>
+</html>
