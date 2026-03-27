@@ -2,12 +2,21 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/core.php';
+applySecurityHeaders(false);
+
 session_start();
 
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     header('Location: index.html');
     exit;
 }
+
+if (!isset($_SESSION['csrf_token']) || !is_string($_SESSION['csrf_token']) || $_SESSION['csrf_token'] === '') {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
+$csrfToken = $_SESSION['csrf_token'];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -406,6 +415,8 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
         .status.pending { color: #fde68a; border-color: rgba(245, 158, 11, 0.35); background: rgba(245, 158, 11, 0.15); }
         .status.locked { color: #fca5a5; border-color: rgba(239, 68, 68, 0.32); background: rgba(239, 68, 68, 0.15); }
         .status.confirmed { color: #a5f3fc; border-color: rgba(34, 211, 238, 0.35); background: rgba(34, 211, 238, 0.15); }
+        .status.preparing { color: #bfdbfe; border-color: rgba(59, 130, 246, 0.35); background: rgba(59, 130, 246, 0.15); }
+        .status.out_for_delivery { color: #f0abfc; border-color: rgba(217, 70, 239, 0.35); background: rgba(217, 70, 239, 0.15); }
         .status.completed { color: #86efac; border-color: rgba(16, 185, 129, 0.35); background: rgba(16, 185, 129, 0.15); }
         .status.cancelled { color: #fca5a5; border-color: rgba(239, 68, 68, 0.32); background: rgba(239, 68, 68, 0.15); }
 
@@ -599,6 +610,11 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
                 <a href="#" data-view="customers">Customers</a>
                 <a href="#" data-view="staff">Staff</a>
                 <a href="#" data-view="reports">Reports</a>
+                <a href="#" data-view="calendar">Calendar</a>
+                <a href="#" data-view="permissions">Permissions</a>
+                <a href="#" data-view="queue">Queue</a>
+                <a href="#" data-view="audit">Audit</a>
+                <a href="#" data-view="settings">Settings</a>
             </nav>
 
             <div class="sidebar-bottom">
@@ -765,6 +781,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     <script>
         const API_URL = 'admin_api.php';
         const DEFAULT_PACKAGE_IMAGE = 'uploads/packages/placeholder-food.svg';
+        const CSRF_TOKEN = <?php echo json_encode($csrfToken, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
 
         const metricElements = document.querySelectorAll('.metric');
         const growthElements = document.querySelectorAll('[data-growth-key]');
@@ -834,6 +851,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
         async function apiPost(action, data = {}) {
             const formData = new FormData();
             formData.set('action', action);
+            formData.set('csrf_token', CSRF_TOKEN);
             Object.entries(data).forEach(([key, value]) => {
                 if (value instanceof File) {
                     formData.set(key, value);
@@ -1027,6 +1045,8 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
                             <option value="all" ${status === 'all' ? 'selected' : ''}>All Status</option>
                             <option value="pending" ${status === 'pending' ? 'selected' : ''}>Pending</option>
                             <option value="confirmed" ${status === 'confirmed' ? 'selected' : ''}>Confirmed</option>
+                            <option value="preparing" ${status === 'preparing' ? 'selected' : ''}>Preparing</option>
+                            <option value="out_for_delivery" ${status === 'out_for_delivery' ? 'selected' : ''}>Out for Delivery</option>
                             <option value="completed" ${status === 'completed' ? 'selected' : ''}>Completed</option>
                             <option value="cancelled" ${status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
                         </select>
@@ -1035,12 +1055,14 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
                 <div class="feature-grid">
                     <div class="feature-card"><div class="feature-label">Pending</div><div class="feature-value">${Number(summary.pending || 0)}</div></div>
                     <div class="feature-card"><div class="feature-label">Confirmed</div><div class="feature-value">${Number(summary.confirmed || 0)}</div></div>
+                    <div class="feature-card"><div class="feature-label">Preparing</div><div class="feature-value">${Number(summary.preparing || 0)}</div></div>
+                    <div class="feature-card"><div class="feature-label">Out for Delivery</div><div class="feature-value">${Number(summary.out_for_delivery || 0)}</div></div>
                     <div class="feature-card"><div class="feature-label">Completed</div><div class="feature-value">${Number(summary.completed || 0)}</div></div>
                     <div class="feature-card"><div class="feature-label">Revenue</div><div class="feature-value">${formatMoney(summary.revenue || 0)}</div></div>
                 </div>
                 <div class="table-wrap">
                     <table>
-                        <thead><tr><th>Code</th><th>Title</th><th>Customer</th><th>Event Date</th><th>Status</th><th>Amount</th><th>Update</th></tr></thead>
+                        <thead><tr><th>Code</th><th>Title</th><th>Customer</th><th>Event Date</th><th>Guests</th><th>Venue</th><th>Status</th><th>Amount</th><th>Update</th></tr></thead>
                         <tbody>
                             ${rows.map((row) => `
                                 <tr>
@@ -1048,12 +1070,16 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
                                     <td>${escapeHtml(row.title)}</td>
                                     <td>${escapeHtml(row.customer)}</td>
                                     <td>${escapeHtml(row.eventDate)}</td>
+                                    <td>${escapeHtml(row.guestCount || '-')}</td>
+                                    <td>${escapeHtml(row.venueAddress || '-')}</td>
                                     <td><span class="status ${escapeHtml(row.status)}">${escapeHtml(row.status)}</span></td>
                                     <td>${formatMoney(row.amount)}</td>
                                     <td>
                                         <select class="control order-status-select" data-order-id="${Number(row.id)}" style="padding:6px 8px;">
                                             <option value="pending" ${row.status === 'pending' ? 'selected' : ''}>Pending</option>
                                             <option value="confirmed" ${row.status === 'confirmed' ? 'selected' : ''}>Confirmed</option>
+                                            <option value="preparing" ${row.status === 'preparing' ? 'selected' : ''}>Preparing</option>
+                                            <option value="out_for_delivery" ${row.status === 'out_for_delivery' ? 'selected' : ''}>Out for Delivery</option>
                                             <option value="completed" ${row.status === 'completed' ? 'selected' : ''}>Completed</option>
                                             <option value="cancelled" ${row.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
                                         </select>
@@ -1176,8 +1202,15 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
                     <input class="control" type="text" name="company_name" placeholder="Company name" value="${escapeHtml(settings.company_name || '')}">
                     <input class="control" type="email" name="support_email" placeholder="Support email" value="${escapeHtml(settings.support_email || '')}">
                     <input class="control" type="text" name="default_currency" placeholder="Currency (e.g. USD)" value="${escapeHtml(settings.default_currency || '')}">
+                    <input class="control" type="number" min="1" name="max_events_per_day" placeholder="Max events per day" value="${escapeHtml(settings.max_events_per_day || '5')}">
+                    <input class="control" type="number" min="1" name="max_guests_per_day" placeholder="Max guests per day" value="${escapeHtml(settings.max_guests_per_day || '800')}">
+                    <input class="control" type="number" min="30" name="booking_window_days" placeholder="Booking window days" value="${escapeHtml(settings.booking_window_days || '365')}">
+                    <input class="control" type="text" name="payment_provider" placeholder="Payment provider" value="${escapeHtml(settings.payment_provider || 'mock')}">
+                    <input class="control" type="text" name="payment_checkout_base_url" placeholder="Checkout base URL" value="${escapeHtml(settings.payment_checkout_base_url || '')}">
+                    <input class="control" type="text" name="payment_webhook_secret" placeholder="Webhook secret" value="${escapeHtml(settings.payment_webhook_secret || '')}">
                     <label class="panel-sub"><input type="checkbox" name="notifications_enabled" ${notificationsEnabled ? 'checked' : ''}> Enable notifications</label>
                     <label class="panel-sub"><input type="checkbox" name="maintenance_mode" ${maintenanceMode ? 'checked' : ''}> Maintenance mode</label>
+                    <label class="panel-sub"><input type="checkbox" name="allow_overbooking" ${String(settings.allow_overbooking || '0') === '1' ? 'checked' : ''}> Allow overbooking</label>
                     <button class="btn primary" type="submit">Save Settings</button>
                 </form>
             `;
@@ -1191,14 +1224,167 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
                         company_name: formData.get('company_name') || '',
                         support_email: formData.get('support_email') || '',
                         default_currency: formData.get('default_currency') || '',
+                        max_events_per_day: formData.get('max_events_per_day') || '5',
+                        max_guests_per_day: formData.get('max_guests_per_day') || '800',
+                        booking_window_days: formData.get('booking_window_days') || '365',
+                        payment_provider: formData.get('payment_provider') || 'mock',
+                        payment_checkout_base_url: formData.get('payment_checkout_base_url') || '',
+                        payment_webhook_secret: formData.get('payment_webhook_secret') || '',
                         notifications_enabled: formData.get('notifications_enabled') ? '1' : '0',
-                        maintenance_mode: formData.get('maintenance_mode') ? '1' : '0'
+                        maintenance_mode: formData.get('maintenance_mode') ? '1' : '0',
+                        allow_overbooking: formData.get('allow_overbooking') ? '1' : '0'
                     });
                     alert('Settings saved successfully.');
                 } catch (error) {
                     alert(error.message || 'Unable to save settings');
                 }
             });
+        }
+
+        function renderCalendar(rows) {
+            const data = Array.isArray(rows) ? rows : [];
+            featureTitle.textContent = 'Calendar';
+            featureMeta.textContent = `Days: ${data.length}`;
+            featureContent.innerHTML = `
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Date</th><th>Events</th><th>Guests</th><th>Capacity</th><th>Conflict</th></tr></thead>
+                        <tbody>
+                            ${data.map((row) => `
+                                <tr>
+                                    <td>${escapeHtml(row.date)}</td>
+                                    <td>${Number(row.events || 0)} / ${Number(row.eventsCapacity || 0)}</td>
+                                    <td>${Number(row.guests || 0)} / ${Number(row.guestsCapacity || 0)}</td>
+                                    <td>${Number(row.eventsCapacity || 0)} events, ${Number(row.guestsCapacity || 0)} guests</td>
+                                    <td>${row.isConflict ? '<span class="status locked">Conflict</span>' : '<span class="status active">OK</span>'}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function renderPermissions(data) {
+            const matrix = data || {};
+            const roles = ['admin', 'staff', 'customer'];
+
+            featureTitle.textContent = 'Permissions';
+            featureMeta.textContent = 'Role based matrix';
+            featureContent.innerHTML = roles.map((role) => {
+                const rows = Array.isArray(matrix[role]) ? matrix[role] : [];
+                return `
+                    <div class="panel-sub" style="margin:10px 0 6px;text-transform:capitalize;">${role}</div>
+                    <div class="table-wrap" style="margin-bottom:12px;">
+                        <table>
+                            <thead><tr><th>Permission</th><th>Allowed</th><th>Save</th></tr></thead>
+                            <tbody>
+                                ${rows.map((row) => {
+                                    const permission = escapeHtml(row.permission);
+                                    const roleAttr = escapeHtml(role);
+                                    return `
+                                        <tr>
+                                            <td>${permission}</td>
+                                            <td><input type="checkbox" data-perm-role="${roleAttr}" data-perm-name="${permission}" ${row.isAllowed ? 'checked' : ''}></td>
+                                            <td><button class="btn" type="button" data-perm-save="${roleAttr}|${permission}">Update</button></td>
+                                        </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }).join('');
+
+            featureContent.querySelectorAll('[data-perm-save]').forEach((button) => {
+                button.addEventListener('click', async () => {
+                    const key = String(button.getAttribute('data-perm-save') || '');
+                    const parts = key.split('|');
+                    if (parts.length !== 2) {
+                        return;
+                    }
+
+                    const role = parts[0];
+                    const permission = parts[1];
+                    const input = featureContent.querySelector(`[data-perm-role="${role}"][data-perm-name="${permission}"]`);
+                    const isAllowed = input instanceof HTMLInputElement && input.checked ? '1' : '0';
+                    try {
+                        await apiPost('set-permission', { role, permission, is_allowed: isAllowed });
+                        alert('Permission updated.');
+                    } catch (error) {
+                        alert(error.message || 'Unable to update permission');
+                    }
+                });
+            });
+        }
+
+        function renderQueue() {
+            featureTitle.textContent = 'Queue';
+            featureMeta.textContent = 'Async jobs';
+            featureContent.innerHTML = `
+                <div class="tools-left" style="display:grid;gap:10px;max-width:480px;">
+                    <button class="btn" type="button" id="queueExportOrdersBtn">Queue Orders Export</button>
+                    <button class="btn" type="button" id="queueExportPaymentsBtn">Queue Payments Export</button>
+                    <button class="btn" type="button" id="queueRemindersBtn">Queue Reminder Dispatch</button>
+                    <input class="control" type="number" min="1" id="queueJobId" placeholder="Job ID for status">
+                    <button class="btn primary" type="button" id="queueCheckBtn">Check Job Status</button>
+                    <div class="panel-sub" id="queueStatusOutput">No job checked yet.</div>
+                </div>
+            `;
+
+            const queueStatusOutput = document.getElementById('queueStatusOutput');
+            const queueJobId = document.getElementById('queueJobId');
+            document.getElementById('queueExportOrdersBtn')?.addEventListener('click', async () => {
+                const result = await apiPost('queue-export', { type: 'orders' });
+                queueStatusOutput.textContent = `Orders export queued. Job ID: ${result?.data?.jobId || 'N/A'}`;
+            });
+            document.getElementById('queueExportPaymentsBtn')?.addEventListener('click', async () => {
+                const result = await apiPost('queue-export', { type: 'payments' });
+                queueStatusOutput.textContent = `Payments export queued. Job ID: ${result?.data?.jobId || 'N/A'}`;
+            });
+            document.getElementById('queueRemindersBtn')?.addEventListener('click', async () => {
+                const result = await apiPost('queue-reminders');
+                queueStatusOutput.textContent = `Reminders queued. Job ID: ${result?.data?.jobId || 'N/A'}`;
+            });
+            document.getElementById('queueCheckBtn')?.addEventListener('click', async () => {
+                const id = Number(queueJobId?.value || 0);
+                if (id <= 0) {
+                    queueStatusOutput.textContent = 'Enter a valid job ID.';
+                    return;
+                }
+
+                try {
+                    const data = await apiGet('job-status', { job_id: id });
+                    queueStatusOutput.textContent = `Job ${data.id}: ${data.status} (attempts: ${data.attempts})${data.lastError ? ' - ' + data.lastError : ''}`;
+                } catch (error) {
+                    queueStatusOutput.textContent = error.message || 'Unable to fetch job status';
+                }
+            });
+        }
+
+        function renderAudit(rows) {
+            const data = Array.isArray(rows) ? rows : [];
+            featureTitle.textContent = 'Audit Logs';
+            featureMeta.textContent = `Recent events: ${data.length}`;
+            featureContent.innerHTML = `
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>ID</th><th>Action</th><th>Entity</th><th>Actor</th><th>IP</th><th>Time</th></tr></thead>
+                        <tbody>
+                            ${data.map((row) => `
+                                <tr>
+                                    <td>${Number(row.id)}</td>
+                                    <td>${escapeHtml(row.action)}</td>
+                                    <td>${escapeHtml(row.entityType)}${row.entityId ? ' #' + Number(row.entityId) : ''}</td>
+                                    <td>${escapeHtml(row.actorName || 'System')}</td>
+                                    <td>${escapeHtml(row.ipAddress || '')}</td>
+                                    <td>${escapeHtml(row.createdAt || '')}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
         }
 
         function renderPackages(data, query = '', status = 'all') {
@@ -1323,6 +1509,39 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
                 renderFeatureLoading('Reports', 'Generating report...');
                 const data = await apiGet('reports');
                 renderReports(data);
+                return;
+            }
+
+            if (view === 'calendar') {
+                renderFeatureLoading('Calendar', 'Loading workload...');
+                const data = await apiGet('calendar');
+                renderCalendar(data);
+                return;
+            }
+
+            if (view === 'permissions') {
+                renderFeatureLoading('Permissions', 'Loading matrix...');
+                const data = await apiGet('permissions');
+                renderPermissions(data);
+                return;
+            }
+
+            if (view === 'queue') {
+                renderQueue();
+                return;
+            }
+
+            if (view === 'audit') {
+                renderFeatureLoading('Audit Logs', 'Loading logs...');
+                const data = await apiGet('audit-logs', { limit: 60 });
+                renderAudit(data);
+                return;
+            }
+
+            if (view === 'settings') {
+                renderFeatureLoading('Settings', 'Loading settings...');
+                const data = await apiGet('settings');
+                renderSettings(data);
                 return;
             }
         }

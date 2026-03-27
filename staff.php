@@ -2,12 +2,21 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/core.php';
+applySecurityHeaders(false);
+
 session_start();
 
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'staff') {
     header('Location: index.html');
     exit;
 }
+
+if (!isset($_SESSION['csrf_token']) || !is_string($_SESSION['csrf_token']) || $_SESSION['csrf_token'] === '') {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
+$csrfToken = $_SESSION['csrf_token'];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -191,6 +200,8 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'staff') {
 
         .status.pending { color: #fde68a; background: rgba(245, 158, 11, 0.2); }
         .status.confirmed { color: #a5f3fc; background: rgba(34, 211, 238, 0.2); }
+        .status.preparing { color: #bfdbfe; background: rgba(59, 130, 246, 0.2); }
+        .status.out_for_delivery { color: #f0abfc; background: rgba(217, 70, 239, 0.2); }
         .status.completed { color: #86efac; background: rgba(16, 185, 129, 0.2); }
         .status.cancelled { color: #fca5a5; background: rgba(239, 68, 68, 0.2); }
 
@@ -270,6 +281,8 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'staff') {
                         <option value="all">All Status</option>
                         <option value="pending">Pending</option>
                         <option value="confirmed">Confirmed</option>
+                        <option value="preparing">Preparing</option>
+                        <option value="out_for_delivery">Out for Delivery</option>
                         <option value="completed">Completed</option>
                         <option value="cancelled">Cancelled</option>
                     </select>
@@ -282,6 +295,8 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'staff') {
                                 <th>Title</th>
                                 <th>Customer</th>
                                 <th>Event Date</th>
+                                <th>Guests</th>
+                                <th>Venue</th>
                                 <th>Status</th>
                                 <th>Amount</th>
                                 <th>Update</th>
@@ -303,12 +318,24 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'staff') {
                     <input class="control" id="activityDate" type="date">
                 </div>
                 <div class="list" id="activityList"></div>
+
+                <h2 style="margin-top:14px;">Calendar Load</h2>
+                <div class="list" id="calendarList"></div>
+
+                <h2 style="margin-top:14px;">Kitchen Tasks</h2>
+                <form class="tools" id="kitchenTaskForm" style="grid-template-columns:1fr;">
+                    <input class="control" id="kitchenOrderId" type="number" min="1" placeholder="Order ID" required>
+                    <input class="control" id="kitchenTaskTitle" type="text" placeholder="Task title" required>
+                    <button class="btn" type="submit" id="kitchenTaskSaveBtn">Create Task</button>
+                </form>
+                <div class="list" id="kitchenTaskList"></div>
             </article>
         </section>
     </div>
 
     <script>
         const API_URL = 'staff_api.php';
+        const CSRF_TOKEN = <?php echo json_encode($csrfToken, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
 
         const pendingOrdersValue = document.getElementById('pendingOrdersValue');
         const confirmedOrdersValue = document.getElementById('confirmedOrdersValue');
@@ -323,6 +350,12 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'staff') {
         const activityQuery = document.getElementById('activityQuery');
         const activityDate = document.getElementById('activityDate');
         const activityList = document.getElementById('activityList');
+        const calendarList = document.getElementById('calendarList');
+        const kitchenTaskForm = document.getElementById('kitchenTaskForm');
+        const kitchenOrderId = document.getElementById('kitchenOrderId');
+        const kitchenTaskTitle = document.getElementById('kitchenTaskTitle');
+        const kitchenTaskSaveBtn = document.getElementById('kitchenTaskSaveBtn');
+        const kitchenTaskList = document.getElementById('kitchenTaskList');
 
         async function apiGet(action, params = {}) {
             const query = new URLSearchParams({ action, ...params });
@@ -337,6 +370,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'staff') {
         async function apiPost(action, payload = {}) {
             const formData = new FormData();
             formData.set('action', action);
+            formData.set('csrf_token', CSRF_TOKEN);
             Object.entries(payload).forEach(([key, value]) => formData.set(key, String(value)));
 
             const response = await fetch(API_URL, {
@@ -391,12 +425,16 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'staff') {
                     <td>${escapeHtml(order.title)}</td>
                     <td>${escapeHtml(order.customerName)}</td>
                     <td>${escapeHtml(order.eventDate)}</td>
+                    <td>${escapeHtml(order.guestCount || '-')}</td>
+                    <td>${escapeHtml(order.venueAddress || '-')}</td>
                     <td><span class="status ${escapeHtml(order.status)}">${escapeHtml(order.status)}</span></td>
                     <td>${formatMoney(order.totalAmount)}</td>
                     <td>
                         <select class="control" data-order-select="${Number(order.id)}" style="padding:6px 8px;">
                             <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
                             <option value="confirmed" ${order.status === 'confirmed' ? 'selected' : ''}>Confirmed</option>
+                            <option value="preparing" ${order.status === 'preparing' ? 'selected' : ''}>Preparing</option>
+                            <option value="out_for_delivery" ${order.status === 'out_for_delivery' ? 'selected' : ''}>Out for Delivery</option>
                             <option value="completed" ${order.status === 'completed' ? 'selected' : ''}>Completed</option>
                             <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
                         </select>
@@ -455,6 +493,54 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'staff') {
             `).join('');
         }
 
+        async function loadCalendar() {
+            const rows = await apiGet('calendar');
+            if (!Array.isArray(rows) || !rows.length) {
+                calendarList.innerHTML = '<div class="empty">No calendar data available.</div>';
+                return;
+            }
+
+            calendarList.innerHTML = rows.slice(0, 10).map((row) => `
+                <div class="list-item">
+                    <strong>${escapeHtml(row.eventDate)}</strong>
+                    <p>Events: ${Number(row.events || 0)} • Guests: ${Number(row.guests || 0)}</p>
+                </div>
+            `).join('');
+        }
+
+        async function loadKitchenTasks() {
+            const rows = await apiGet('kitchen-tasks');
+            if (!Array.isArray(rows) || !rows.length) {
+                kitchenTaskList.innerHTML = '<div class="empty">No kitchen tasks yet.</div>';
+                return;
+            }
+
+            kitchenTaskList.innerHTML = rows.slice(0, 12).map((task) => `
+                <div class="list-item">
+                    <strong>${escapeHtml(task.title)} (${escapeHtml(task.orderCode || ('Order #' + task.orderId))})</strong>
+                    <p>Status: ${escapeHtml(task.status)}${task.assignedName ? ' • Assigned: ' + escapeHtml(task.assignedName) : ''}</p>
+                    <div class="tools" style="margin-top:6px;">
+                        <button class="btn" type="button" data-kitchen-status="todo" data-kitchen-id="${Number(task.id)}">To Do</button>
+                        <button class="btn" type="button" data-kitchen-status="in_progress" data-kitchen-id="${Number(task.id)}">In Progress</button>
+                        <button class="btn" type="button" data-kitchen-status="done" data-kitchen-id="${Number(task.id)}">Done</button>
+                    </div>
+                </div>
+            `).join('');
+
+            kitchenTaskList.querySelectorAll('[data-kitchen-id]').forEach((button) => {
+                button.addEventListener('click', async () => {
+                    const taskId = Number(button.getAttribute('data-kitchen-id'));
+                    const status = String(button.getAttribute('data-kitchen-status') || 'todo');
+                    try {
+                        await apiPost('update-kitchen-task-status', { id: taskId, status });
+                        await loadKitchenTasks();
+                    } catch (error) {
+                        alert(error.message || 'Unable to update task');
+                    }
+                });
+            });
+        }
+
         [orderQuery, orderStatusFilter].forEach((element) => {
             element.addEventListener('input', () => loadOrders().catch((error) => alert(error.message || 'Unable to load orders')));
             element.addEventListener('change', () => loadOrders().catch((error) => alert(error.message || 'Unable to load orders')));
@@ -465,9 +551,32 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'staff') {
             element.addEventListener('change', () => loadActivity().catch((error) => alert(error.message || 'Unable to load activity')));
         });
 
+        kitchenTaskForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const orderId = Number(kitchenOrderId.value || 0);
+            const title = kitchenTaskTitle.value.trim();
+            if (orderId <= 0 || title === '') {
+                alert('Order ID and task title are required.');
+                return;
+            }
+
+            try {
+                kitchenTaskSaveBtn.disabled = true;
+                kitchenTaskSaveBtn.textContent = 'Saving...';
+                await apiPost('create-kitchen-task', { order_id: orderId, title });
+                kitchenTaskForm.reset();
+                await loadKitchenTasks();
+            } catch (error) {
+                alert(error.message || 'Unable to create kitchen task');
+            } finally {
+                kitchenTaskSaveBtn.disabled = false;
+                kitchenTaskSaveBtn.textContent = 'Create Task';
+            }
+        });
+
         (async () => {
             try {
-                await Promise.all([loadOverview(), loadOrders(), loadCustomers(), loadActivity()]);
+                await Promise.all([loadOverview(), loadOrders(), loadCustomers(), loadActivity(), loadCalendar(), loadKitchenTasks()]);
             } catch (error) {
                 alert(error.message || 'Unable to load staff dashboard');
             }

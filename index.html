@@ -31,6 +31,10 @@
             overflow-x: hidden;
         }
 
+        html {
+            scroll-padding-top: 110px;
+        }
+
         /* Header */
         header {
             position: fixed;
@@ -3707,14 +3711,30 @@
             });
         });
 
-        // Add parallax effect to hero background
-        window.addEventListener('scroll', () => {
-            const scrolled = window.pageYOffset;
+        // Add parallax effect to hero background without moving layout content
+        (() => {
             const hero = document.querySelector('.hero');
-            if (hero && scrolled < window.innerHeight) {
-                hero.style.transform = `translateY(${scrolled * 0.5}px)`;
+            if (!hero || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                return;
             }
-        });
+
+            let rafId = null;
+            const updateHeroParallax = () => {
+                const scrolled = window.pageYOffset;
+                if (scrolled < window.innerHeight) {
+                    hero.style.backgroundPosition = `center ${-(scrolled * 0.2)}px`;
+                }
+                rafId = null;
+            };
+
+            window.addEventListener('scroll', () => {
+                if (rafId === null) {
+                    rafId = window.requestAnimationFrame(updateHeroParallax);
+                }
+            }, { passive: true });
+
+            updateHeroParallax();
+        })();
 
         // Lazy loading effect for images (if you add images later)
         if ('IntersectionObserver' in window) {
